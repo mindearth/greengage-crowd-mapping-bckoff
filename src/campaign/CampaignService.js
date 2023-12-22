@@ -9,6 +9,13 @@ export const listCampaign = (token) => axios.get(baseUrl,
         }
     })
 
+export const getCampaign = (token, campaignId) => axios.get(`${baseUrl}/${campaignId}`,
+    {
+        headers: {
+            'Authorization': `Bearer ${token}`,
+        }
+    })
+
 export const insertCampaign = (token, data) => axios.post(baseUrl,
     data,
     {
@@ -17,7 +24,7 @@ export const insertCampaign = (token, data) => axios.post(baseUrl,
         }
     })
 
-export const updateCampaign = (token, data) => axios.put(baseUrl,
+export const updateCampaign = (token, data) => axios.put(`${baseUrl}/${data.id}`,
     data,
     {
         headers: {

@@ -1,7 +1,7 @@
-import {listCampaign} from "./CampaignService.js";
+import {getCampaign, listCampaign} from "./CampaignService.js";
 import {useAuth} from "react-oidc-context";
 import {useEffect, useState} from "react";
-import {Button, Divider, Progress, Select, Space, Table, Tag} from "antd";
+import {Button, Divider, Progress, Space, Table, Tag} from "antd";
 import {getIntervalTimeFromNow} from "../core/utils.js";
 import {ReloadOutlined} from "@ant-design/icons";
 import Search from "antd/lib/input/Search.js";
@@ -69,18 +69,21 @@ export function CampaignList() {
             width: '200px',
             render: (_, record) => (
                 <>
-                    <Button onClick={() => editItem(record)} type="link">Edit</Button>
+                    <Button onClick={() => editItem(record.id)} type="link">Edit</Button>
                     <Divider
                         style={{padding: 0, margin: 0}}
                         type="vertical"/>
-                    <Button  type="link">Delete</Button>
+                    <Button type="link">Delete</Button>
                 </>
             )
         }
     ];
 
-    function editItem(data) {
-        setEditData(data)
+    async function editItem(campaignId) {
+
+        const response = await getCampaign(auth.user.access_token, campaignId)
+
+        setEditData(response.data)
 
         showDrawer();
     }

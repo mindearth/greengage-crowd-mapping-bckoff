@@ -1,19 +1,4 @@
-import {
-    Button,
-    Checkbox,
-    Col,
-    Collapse,
-    DatePicker,
-    Divider,
-    Drawer,
-    Form,
-    Input,
-    Row,
-    Select,
-    Space,
-    Switch,
-    Typography
-} from "antd";
+import {Button, DatePicker, Drawer, Form, Input, Space, Switch, Typography} from "antd";
 import {useEffect, useState} from "react";
 import TextArea from "antd/lib/input/TextArea.js";
 import dayjs from 'dayjs';
@@ -43,15 +28,15 @@ export function CampaignEdit({
         setIsLoading(true)
 
         editData
-            ? await updateCampaign(auth.user.access_token,{
-                id: 0,
+            ? await updateCampaign(auth.user.access_token, {
+                id: editData.id,
                 name: values.name,
                 description: values.description,
                 enable: values.enable === true,
                 dateStart: dayjs(values.duration[0]).format('YYYY-MM-DD'),
                 dateEnd: dayjs(values.duration[1]).format('YYYY-MM-DD')
             })
-            : await insertCampaign(auth.user.access_token,{
+            : await insertCampaign(auth.user.access_token, {
                 id: 0,
                 name: values.name,
                 description: values.description,
