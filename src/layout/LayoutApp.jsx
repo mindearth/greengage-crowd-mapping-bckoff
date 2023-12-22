@@ -13,7 +13,6 @@ export function LayoutApp() {
     const [defaultSelectedKeys, setDefaultSelectedKeys] = useState()
     const [isCollapsed, setIsCollapsed] = useState(false)
 
-
     const items = [
         getItem('Home', '1', <HomeOutlined/>),
         getItem('Campaign', '2', <NotificationOutlined/>),

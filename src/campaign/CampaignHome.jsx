@@ -1,5 +1,13 @@
+import {Tabs} from "antd";
+import {CampaignList} from "./CampaignList.jsx";
+
 export function CampaignHome() {
+
+    const items = [{
+        key: '1', label: 'List of Campaigns', children: <CampaignList/>,
+    }]
+
     return (
-        <h1>Campaign</h1>
+        <Tabs defaultActiveKey="1" items={items}/>
     )
 }
