@@ -17,6 +17,8 @@ import {
 import {useEffect, useState} from "react";
 import TextArea from "antd/lib/input/TextArea.js";
 import dayjs from 'dayjs';
+import {insertCampaign, updateCampaign} from "./CampaignService.js";
+import {useAuth} from "react-oidc-context";
 
 const {Text} = Typography;
 const {RangePicker} = DatePicker;
@@ -26,6 +28,7 @@ export function CampaignEdit({
                                  closeDrawer,
                                  editData
                              }) {
+    const auth = useAuth();
     const [isLoading, setIsLoading] = useState(false);
     const [clients, setClients] = useState([]);
     const [form] = Form.useForm();
@@ -40,47 +43,24 @@ export function CampaignEdit({
         setIsLoading(true)
 
         editData
-            ? await updateData({
-                id: editData.id,
-                clientCampaignsId: values.client,
+            ? await updateCampaign(auth.user.access_token,{
+                id: 0,
                 name: values.name,
                 description: values.description,
-                enabled: values.enabled === true,
+                enable: values.enable === true,
                 dateStart: dayjs(values.duration[0]).format('YYYY-MM-DD'),
                 dateEnd: dayjs(values.duration[1]).format('YYYY-MM-DD')
             })
-            : await insertData({
-                clientCampaignsId: values.client,
+            : await insertCampaign(auth.user.access_token,{
+                id: 0,
                 name: values.name,
                 description: values.description,
-                enabled: values.enabled === true,
+                enable: values.enable === true,
                 dateStart: dayjs(values.duration[0]).format('YYYY-MM-DD'),
                 dateEnd: dayjs(values.duration[1]).format('YYYY-MM-DD')
             })
 
         closeDrawer(true)
-    }
-
-    async function insertData(data) {
-        const client = generateClient();
-
-        await client.graphql({
-            query: createCampaign,
-            variables: {
-                input: data
-            }
-        });
-    }
-
-    async function updateData(data) {
-        // const client = generateClient();
-        //
-        // await client.graphql({
-        //     query: updateCampaign,
-        //     variables: {
-        //         input: data
-        //     }
-        // });
     }
 
     useEffect(() => {
@@ -114,7 +94,7 @@ export function CampaignEdit({
                 layout="vertical"
                 initialValues={editData
                     ? {
-                        enabled: editData.enabled,
+                        enable: editData.enable,
                         name: editData.name,
                         description: editData.description,
                         duration: [
@@ -123,7 +103,7 @@ export function CampaignEdit({
                         ]
                     }
                     : {
-                        enabled: true,
+                        enable: true,
                         client: null,
                         name: null,
                         description: null,
@@ -137,12 +117,12 @@ export function CampaignEdit({
                         marginBottom: 0,
                         paddingBottom: 0,
                     }}
-                    name="enabled"
+                    name="enable"
                     label=""
                     valuePropName="checked">
 
                     <Switch
-                        checkedChildren="enabled"
+                        checkedChildren="enable"
                         unCheckedChildren="disabled"
                     />
 
