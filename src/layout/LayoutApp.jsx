@@ -4,14 +4,7 @@ import {Content, Footer, Header} from "antd/lib/layout/layout.js";
 import {Outlet, useLocation, useNavigate} from "react-router-dom";
 import {LayoutHeader} from "./LayoutHeader.jsx";
 import {LayoutFooter} from "./LayoutFooter.jsx";
-import {
-    HomeOutlined,
-    NodeIndexOutlined,
-    NotificationOutlined,
-    PieChartOutlined,
-    SkinOutlined,
-    UserOutlined
-} from "@ant-design/icons";
+import {HomeOutlined, NodeIndexOutlined, NotificationOutlined, SkinOutlined} from "@ant-design/icons";
 import {useEffect, useState} from "react";
 
 export function LayoutApp() {
@@ -23,10 +16,9 @@ export function LayoutApp() {
 
     const items = [
         getItem('Home', '1', <HomeOutlined/>),
-        getItem('Client', '2', <UserOutlined/>),
-        getItem('Campaign', '3', <NotificationOutlined/>),
-        getItem('Mission', '4', <NodeIndexOutlined />),
-        getItem('Mapper', '5', <SkinOutlined/>),
+        getItem('Campaign', '2', <NotificationOutlined/>),
+        getItem('Mission', '3', <NodeIndexOutlined/>),
+        getItem('Mapper', '4', <SkinOutlined/>),
     ];
 
     function getItem(label, key, icon, children) {
@@ -41,19 +33,16 @@ export function LayoutApp() {
     function clickItem(item) {
 
         switch (item.key) {
-            case '2':
-                navigate('/client')
-                break
 
-            case '3':
+            case '2':
                 navigate('/campaign')
                 break
 
-            case '4':
+            case '3':
                 navigate('/mission')
                 break
 
-            case '5':
+            case '4':
                 navigate('/mapper')
                 break
 
@@ -67,17 +56,14 @@ export function LayoutApp() {
         const path = location.pathname.split('/')
 
         switch (path[1]) {
-            case 'client':
+            case 'campaign':
                 setDefaultSelectedKeys('2')
                 break
-            case 'campaign':
+            case 'mission':
                 setDefaultSelectedKeys('3')
                 break
-            case 'mission':
-                setDefaultSelectedKeys('4')
-                break
             case 'mapper':
-                setDefaultSelectedKeys('5')
+                setDefaultSelectedKeys('4')
                 break
             default:
                 setDefaultSelectedKeys('1')

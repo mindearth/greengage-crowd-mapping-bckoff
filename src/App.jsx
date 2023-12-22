@@ -3,6 +3,9 @@ import {ConfigProvider} from "antd";
 import {BrowserRouter, Route, Routes} from "react-router-dom";
 import {LayoutApp} from "./layout/LayoutApp.jsx";
 import {Home} from "./home/Home.jsx";
+import {CampaignHome} from "./campaign/CampaignHome.jsx";
+import {MissionHome} from "./mission/MissionHome.jsx";
+import {MapperHome} from "./mapper/MapperHome.jsx";
 
 function App() {
     const auth = useAuth();
@@ -40,9 +43,9 @@ function App() {
                     <Routes>
                         <Route path="/" element={<LayoutApp/>}>
                             <Route index element={<Home/>}/>
-                            {/*<Route path="/campaign" element={<CampaignHome/>}/>*/}
-                            {/*<Route path="/mission" element={<MissionHome/>}/>*/}
-                            {/*<Route path="/mapper" element={<MapperHome/>}/>*/}
+                            <Route path="/campaign" element={<CampaignHome/>}/>
+                            <Route path="/mission" element={<MissionHome/>}/>
+                            <Route path="/mapper" element={<MapperHome/>}/>
                         </Route>
                     </Routes>
                 </BrowserRouter>
