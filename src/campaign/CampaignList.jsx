@@ -1,8 +1,10 @@
 import {listCampaign} from "./CampaignService.js";
+import {useAuth} from "react-oidc-context";
 
 export function CampaignList() {
+  const auth = useAuth();
 
-  listCampaign().then(response => {
+  listCampaign(auth.user.access_token).then(response => {
     console.log(response);
   })
 

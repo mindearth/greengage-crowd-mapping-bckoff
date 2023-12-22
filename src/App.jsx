@@ -6,7 +6,6 @@ import {Home} from "./home/Home.jsx";
 import {CampaignHome} from "./campaign/CampaignHome.jsx";
 import {MissionHome} from "./mission/MissionHome.jsx";
 import {MapperHome} from "./mapper/MapperHome.jsx";
-import {setAxiosHeaderConfiguration} from "./core/axiosService.js";
 import {useEffect} from "react";
 
 function App() {
@@ -15,13 +14,12 @@ function App() {
     useEffect(() => {
         // the `return` is important - addAccessTokenExpiring() returns a cleanup function
         return auth.events.addAccessTokenExpiring(() => {
+
             if (alert("You're about to be signed out due to inactivity. Press continue to stay signed in.")) {
                 auth.signinSilent();
-
-
             }
         })
-    }, [auth.events, auth.signinSilent]);
+    }, [auth, auth.events, auth.signinSilent]);
 
 
     switch (auth.activeNavigator) {
@@ -40,7 +38,6 @@ function App() {
     // }
 
     if (auth.isAuthenticated) {
-        setAxiosHeaderConfiguration(auth.user.access_token);
 
         return (
             <ConfigProvider
