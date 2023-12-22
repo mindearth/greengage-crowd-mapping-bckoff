@@ -1,4 +1,8 @@
-import { useAuth } from "react-oidc-context";
+import {useAuth} from "react-oidc-context";
+import {ConfigProvider} from "antd";
+import {BrowserRouter, Route, Routes} from "react-router-dom";
+import {LayoutApp} from "./layout/LayoutApp.jsx";
+import {Home} from "./home/Home.jsx";
 
 function App() {
     const auth = useAuth();
@@ -14,24 +18,41 @@ function App() {
         return <div>Loading...</div>;
     }
 
-    if (auth.error) {
-        return <div>Oops... {auth.error.message}</div>;
-    }
+    // if (auth.error) {
+    //     return <div>Oops... {auth.error.message}</div>;
+    // }
 
     if (auth.isAuthenticated) {
         return (
-            <div>
-                Hello {auth.user?.profile.sub}{" "}
-                <button onClick={() => void auth.removeUser()}>Log out</button>
-            </div>
+            <ConfigProvider
+                theme={{
+                    token: {
+                        // Seed Token
+                        fontFamily: "PPMoriRegular, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',\n" +
+                            "    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue'",
+                        colorPrimary: '#5256BE',
+                        // Alias Token
+                    },
+                }}
+            >
+
+                <BrowserRouter>
+                    <Routes>
+                        <Route path="/" element={<LayoutApp/>}>
+                            <Route index element={<Home/>}/>
+                            {/*<Route path="/campaign" element={<CampaignHome/>}/>*/}
+                            {/*<Route path="/mission" element={<MissionHome/>}/>*/}
+                            {/*<Route path="/mapper" element={<MapperHome/>}/>*/}
+                        </Route>
+                    </Routes>
+                </BrowserRouter>
+            </ConfigProvider>
         );
     }
 
-    return <div>Redirecting...</div>;
+    auth.signinRedirect().then(() => console.log("redirected"));
 
-    // auth.signinRedirect().then(() => console.log("redirected"));
-    // document.location = auth.signinRedirect();
-    // return <button onClick={() => void auth.signinRedirect()}>Log in</button>;
+    return <div>Redirecting...</div>;
 }
 
 export default App;

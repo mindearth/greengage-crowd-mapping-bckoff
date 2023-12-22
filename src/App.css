@@ -1,0 +1,77 @@
+/* VARIABLE */
+
+:root {
+    --color-blue: #000b27;
+    --color-yellow: #FFB649;
+    --color-purple: #5256BE;
+    --color-white: #ffffff;
+    --color-white-07: rgba(255, 255, 255, 0.7);
+}
+
+
+/* FONT */
+@font-face {
+    font-family: PPMoriRegular;
+    src: local("PPMoriRegular"), url("./assets/font/PPMori-Regular.ttf") format("truetype");
+}
+
+@font-face {
+    font-family: SpaceMonoRegular;
+    src: local("SpaceMonoRegular"), url("./assets/font/SpaceMono-Regular.ttf") format("truetype");
+}
+
+
+/* ANT - fix */
+.ant-form-vertical {
+    position: relative;
+}
+
+.ant-drawer-content-wrapper {
+    border-top-left-radius: 20px;
+    border-bottom-left-radius: 20px;
+    border: 1px var(--color-yellow) solid;
+    overflow: hidden;
+}
+
+.ant-btn-icon-only {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ant-drawer-title {
+    font-weight: 300 !important;
+}
+
+.ant-tabs, .ant-tabs-content, .ant-tabs-tabpane {
+    height: 100%;
+}
+
+.ant-modal .ant-modal-title {
+    font-weight: 300;
+}
+
+.ant-modal-content {
+    height: 100%;
+}
+
+.ant-modal-body {
+    height: calc(100% - 75px);
+    width: calc(100% + 48px);
+    margin: 0 -24px;
+    border-top: var(--color-yellow) 1px solid;
+    border-bottom: var(--color-yellow) 1px solid;
+}
+
+.select-map-style .ant-select-selector {
+    padding: 0 !important;
+
+}
+
+/* MAPBOXGL - fix */
+.mapboxgl-ctrl-geocoder {
+    width: 600px !important;
+    max-width: 600px !important;
+}
+
+
