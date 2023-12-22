@@ -31,3 +31,10 @@ export const updateCampaign = (token, data) => axios.put(`${baseUrl}/${data.id}`
             'Authorization': `Bearer ${token}`,
         }
     })
+
+export const deleteCampaign = (token, campaignId) => axios.delete(`${baseUrl}/${campaignId}`,
+    {
+        headers: {
+            'Authorization': `Bearer ${token}`,
+        }
+    })

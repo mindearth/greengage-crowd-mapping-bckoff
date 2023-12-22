@@ -1,7 +1,7 @@
-import {getCampaign, listCampaign} from "./CampaignService.js";
+import {deleteCampaign, getCampaign, listCampaign} from "./CampaignService.js";
 import {useAuth} from "react-oidc-context";
 import {useEffect, useState} from "react";
-import {Button, Divider, Progress, Space, Table, Tag} from "antd";
+import {Button, Divider, Popconfirm, Progress, Space, Table, Tag} from "antd";
 import {getIntervalTimeFromNow} from "../core/utils.js";
 import {ReloadOutlined} from "@ant-design/icons";
 import Search from "antd/lib/input/Search.js";
@@ -73,19 +73,32 @@ export function CampaignList() {
                     <Divider
                         style={{padding: 0, margin: 0}}
                         type="vertical"/>
-                    <Button type="link">Delete</Button>
+                    <Popconfirm
+                        title="Delete"
+                        description="Are you sure to delete this campaign?"
+                        onConfirm={() => deleteTask(record.id)}
+                        okText="Yes"
+                        cancelText="No"
+                    >
+                        <Button type="link">Delete</Button>
+                    </Popconfirm>
                 </>
             )
         }
     ];
 
     async function editItem(campaignId) {
-
         const response = await getCampaign(auth.user.access_token, campaignId)
 
         setEditData(response.data)
 
         showDrawer();
+    }
+
+    async function deleteTask(campaignId) {
+        await deleteCampaign(auth.user.access_token, campaignId)
+
+        getData()
     }
 
     function editCampaignBoundMap(data) {
