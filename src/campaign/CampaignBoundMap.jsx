@@ -57,7 +57,7 @@ export function CampaignBoundMap({
             key: '4',
             label: 'Base map',
             contentStyle: {
-                padding: "0 0 0 10px"
+                padding: "0 5px 0 10px"
 
             },
             children: <Select
