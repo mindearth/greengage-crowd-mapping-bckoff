@@ -38,3 +38,7 @@ export const deleteCampaign = (token, campaignId) => axios.delete(`${baseUrl}/${
             'Authorization': `Bearer ${token}`,
         }
     })
+
+export async function CampaignUpdateBound(id, name, geojson, areaKm2) {
+    return null
+}

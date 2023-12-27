@@ -6,13 +6,13 @@ import {getIntervalTimeFromNow} from "../core/utils.js";
 import {ReloadOutlined} from "@ant-design/icons";
 import Search from "antd/lib/input/Search.js";
 import {CampaignEdit} from "./CampaignEdit.jsx";
+import {CampaignBoundMap} from "./CampaignBoundMap.jsx";
 
 export function CampaignList() {
     const auth = useAuth();
     const [isLoading, setIsLoading] = useState(true);
     const [drawerIsOpen, setDrawerIsOpen] = useState(false);
     const [modalAreaIsOpen, setModalAreaIsOpen] = useState(false);
-    const [modalMissionIsOpen, setModalMissionIsOpen] = useState(false);
     const [editData, setEditData] = useState(null);
     const [data, setData] = useState([]);
     const [filterText, setFilterText] = useState('');
@@ -192,6 +192,13 @@ export function CampaignList() {
                 dataSource={filterText === "" ? data : filterData()}
                 loading={isLoading}
             />
+
+            <CampaignBoundMap
+                campaignId={editData ? editData.id : null}
+                campaignName={editData ? editData.name : null}
+                campaignGeoJson={editData ? editData.geojson : null}
+                modalAreaIsOpen={modalAreaIsOpen}
+                setModalAreaIsOpen={setModalAreaIsOpen}/>
 
             <CampaignEdit
                 drawerIsOpen={drawerIsOpen}

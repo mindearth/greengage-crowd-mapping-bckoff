@@ -7,6 +7,7 @@ import {CampaignHome} from "./campaign/CampaignHome.jsx";
 import {MissionHome} from "./mission/MissionHome.jsx";
 import {MapperHome} from "./mapper/MapperHome.jsx";
 import {useEffect} from "react";
+import './App.css'
 
 function App() {
     const auth = useAuth();
