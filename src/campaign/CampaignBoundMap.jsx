@@ -5,8 +5,9 @@ import {GeocoderControl} from "../core/map/GeocoderControl.jsx";
 import {useEffect, useRef, useState} from "react";
 import {DrawControl} from "../core/map/DrawControl.jsx";
 import {DeleteOutlined} from "@ant-design/icons";
-import {CampaignUpdateBound} from "./CampaignService.js";
+import {updateCampaignBound} from "./CampaignService.js";
 import * as turf from "@turf/turf";
+import {useAuth} from "react-oidc-context";
 
 const {Text} = Typography;
 
@@ -18,6 +19,7 @@ export function CampaignBoundMap({
                                      setModalAreaIsOpen
                                  }) {
 
+    const auth = useAuth();
     const [viewState, setViewState] = useState({})
     const [features, setFeatures] = useState(undefined);
     const [hasFeatures, setHasFeatures] = useState(false);
@@ -54,6 +56,10 @@ export function CampaignBoundMap({
         {
             key: '4',
             label: 'Base map',
+            contentStyle: {
+                padding: "0 0 0 10px"
+
+            },
             children: <Select
                 className="select-map-style"
                 defaultValue={mapStyle}
@@ -139,7 +145,13 @@ export function CampaignBoundMap({
     async function saveBound() {
         const json = JSON.stringify(Object.values(features)[0])
 
-        await CampaignUpdateBound(campaignId, campaignName, json, areaKm2)
+        await updateCampaignBound(
+            auth.user.access_token,
+            {
+                id: campaignId,
+                geojson: json,
+                areaKm2: areaKm2
+            })
 
         setModalAreaIsOpen(false)
     }
