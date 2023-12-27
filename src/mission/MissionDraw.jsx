@@ -1,10 +1,11 @@
-import {Button, Modal} from "antd";
+import {Button, Divider, Modal} from "antd";
 import {GeocoderControl} from "../core/map/GeocoderControl.jsx";
 import Map, {Layer, NavigationControl, ScaleControl, Source} from "react-map-gl";
 import {useEffect, useRef, useState} from "react";
 import * as turf from "@turf/turf";
 import {DrawControl} from "../core/map/DrawControl.jsx";
-import {mapboxGeocodingAddressFirst} from "../core/MapboxService.js";
+import {generateMissionFromPoint} from "./MissionService.js";
+import {NavFinishIcon, NavStartIcon, NavTurnLeftIcon, NavTurnRightIcon} from "../core/customIcons.jsx";
 
 export function MissionDraw({
                                 campaignId,
@@ -16,9 +17,9 @@ export function MissionDraw({
     const [viewState, setViewState] = useState({})
     const [isLoading, setIsLoading] = useState(true)
     const [mapStyle, setMapStyle] = useState('light-v9');
-    const [feature, setFeature] = useState(undefined);
     const [maskedLayer, setMaskedLayer] = useState(undefined);
     const [boundery, setBoundery] = useState(undefined);
+    const [navData, setNavData] = useState([]);
     const mapRef = useRef();
     const refDraw = useRef(null);
     const worldMask = turf.polygon([
@@ -41,22 +42,17 @@ export function MissionDraw({
 
     }
 
-    function onUpdateBound(e) {
-        setFeature(e.features[0])
+    async function onUpdateBound(e) {
+        const data = await generateMissionFromPoint(e.features[0].geometry)
+        console.log(data)
+
+        setNavData(data)
+
+        // setFeature(e.features[0])
         // setFeatures(currFeatures => {
         //     const newFeatures = {...currFeatures};
         //     for (const f of e.features) {
         //         newFeatures[f.id] = f;
-        //     }
-        //     return newFeatures;
-        // });
-    }
-
-    function onDeleteBound(e) {
-        // setFeatures(currFeatures => {
-        //     const newFeatures = {...currFeatures};
-        //     for (const f of e.features) {
-        //         delete newFeatures[f.id];
         //     }
         //     return newFeatures;
         // });
@@ -97,32 +93,32 @@ export function MissionDraw({
         }
     }, [campaignId, modalMissionIsOpen]);
 
-    useEffect(() => {
-
-        console.log(feature)
-
-        if (feature) {
-        //     const json = Object.values(features)[0]
-        //
-        //     console.log(json.geometry.coordinates)
-        //     var line = turf.lineString(json.geometry.coordinates)
-        // console.log(turf.length(line) * 1000)
-
-            console.log(feature.geometry.coordinates)
-
-            var point1 = turf.point(feature.geometry.coordinates[1]);
-            var point2 = turf.point(feature.geometry.coordinates[2]);
-
-            var bearing = turf.rhumbBearing(point1, point2);
-            console.log(bearing)
-
-            mapboxGeocodingAddressFirst(feature.geometry.coordinates[0][0], feature.geometry.coordinates[0][1]).then(response => console.log(response))
-
-
-        }
-
-
-    }, [feature]);
+    // useEffect(() => {
+    //
+    //     console.log(feature)
+    //
+    //     if (feature) {
+    //     //     const json = Object.values(features)[0]
+    //     //
+    //     //     console.log(json.geometry.coordinates)
+    //     //     var line = turf.lineString(json.geometry.coordinates)
+    //     // console.log(turf.length(line) * 1000)
+    //
+    //         console.log(feature.geometry.coordinates)
+    //
+    //         var point1 = turf.point(feature.geometry.coordinates[1]);
+    //         var point2 = turf.point(feature.geometry.coordinates[2]);
+    //
+    //         var bearing = turf.rhumbBearing(point1, point2);
+    //         console.log(bearing)
+    //
+    //         mapboxGeocodingAddressFirst(feature.geometry.coordinates[0][0], feature.geometry.coordinates[0][1]).then(response => console.log(response))
+    //
+    //
+    //     }
+    //
+    //
+    // }, [feature]);
 
     return (
         <Modal
@@ -171,7 +167,6 @@ export function MissionDraw({
                     }}
                     onCreate={onUpdateBound}
                     onUpdate={onUpdateBound}
-                    onDelete={onDeleteBound}
                 />
 
 
@@ -188,6 +183,50 @@ export function MissionDraw({
                     Add new mission
                 </Button>
             </div>
+
+
+            {(navData.length > 0) && <div style={{
+                width: '250px',
+                maxHeight: '400px',
+                position: 'absolute',
+                backgroundColor: '#fff',
+                top: '65px',
+                right: '20px',
+                overflowY: 'auto',
+                borderRadius: '10px',
+                padding: '10px',
+                boxShadow: 'rgba(0, 0, 0, 0.1) 0px 0px 10px 2px',
+            }}>
+                {navData.map((item, idx) => <div key={idx}>
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                    }}>
+                        {item.type === "start" &&
+                            <NavStartIcon style={{width: 15, height: 15, marginRight: 5, fill: '#a1a1a1'}}/>}
+                        {item.type === "right" &&
+                            <NavTurnRightIcon style={{width: 15, height: 15, marginRight: 5, fill: '#a1a1a1'}}/>}
+                        {item.type === "left" &&
+                            <NavTurnLeftIcon style={{width: 15, height: 15, marginRight: 5, fill: '#a1a1a1'}}/>}
+                        {item.description}
+                    </div>
+                    <Divider style={{
+                        fontFamily: 'monospace',
+                        fontSize: '0.9em',
+                        color: '#a1a1a1',
+                        margin: '5px 0'
+                    }}> {item.distance}mt</Divider>
+
+                </div>)}
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                }}>
+                    <NavFinishIcon style={{width: 15, height: 15, marginRight: 5, fill: '#a1a1a1'}}/>
+                    Finish
+                </div>
+            </div>}
+
         </Modal>
     )
 }
