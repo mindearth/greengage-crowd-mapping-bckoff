@@ -1,5 +1,13 @@
+import {Tabs} from "antd";
+import {MissionList} from "./MissionList.jsx";
+
 export function MissionHome() {
+    const items = [{
+        key: '1', label: 'List of Missions', children: <MissionList/>,
+    }
+    ]
+
     return (
-        <h1>Mission</h1>
+        <Tabs defaultActiveKey="1" items={items}/>
     )
 }
