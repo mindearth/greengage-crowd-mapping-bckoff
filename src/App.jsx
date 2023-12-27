@@ -16,9 +16,9 @@ function App() {
         // the `return` is important - addAccessTokenExpiring() returns a cleanup function
         return auth.events.addAccessTokenExpiring(() => {
 
-            if (alert("You're about to be signed out due to inactivity. Press continue to stay signed in.")) {
+            // if (alert("You're about to be signed out due to inactivity. Press continue to stay signed in.")) {
                 auth.signinSilent();
-            }
+            // }
         })
     }, [auth, auth.events, auth.signinSilent]);
 

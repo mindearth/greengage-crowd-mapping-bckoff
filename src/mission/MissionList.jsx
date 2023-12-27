@@ -33,8 +33,12 @@ export function MissionList() {
                     <Radio.Group options={MissionOptions} optionType="button"   buttonStyle="solid" />
                 </Space>
 
-                <Button
-                    type="primary">Add new mission</Button>
+                <Space>
+                    <Button
+                        type="primary">Draw new mission</Button>
+                    <Button
+                        type="primary">Add new mission</Button>
+                </Space>
             </div>
         </>
     )
