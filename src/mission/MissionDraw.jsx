@@ -4,7 +4,7 @@ import Map, {Layer, NavigationControl, ScaleControl, Source} from "react-map-gl"
 import {useEffect, useRef, useState} from "react";
 import * as turf from "@turf/turf";
 import {DrawControl} from "../core/map/DrawControl.jsx";
-import {generateMissionFromPoint} from "./MissionService.js";
+import {generateMissionFromPoint, generateMissionHeaderFromPoint} from "./MissionService.js";
 import {NavFinishIcon, NavStartIcon, NavTurnLeftIcon, NavTurnRightIcon} from "../core/customIcons.jsx";
 
 export function MissionDraw({
@@ -45,6 +45,8 @@ export function MissionDraw({
     async function onUpdateBound(e) {
         const data = await generateMissionFromPoint(e.features[0].geometry)
         console.log(data)
+
+        console.log(generateMissionHeaderFromPoint(e.features[0].geometry))
 
         setNavData(data)
 

@@ -1,6 +1,18 @@
 import * as turf from "@turf/turf";
 import {mapboxGeocodingAddressFirst} from "../core/MapboxService.js";
 
+export function generateMissionHeaderFromPoint(geometry) {
+    const line = turf.lineString(geometry.coordinates)
+    const length = Math.round(turf.length(line) * 1000)
+    const time = Math.round(length / (5 * 1000 / 60))
+
+    return {
+        length: length,
+        time: time
+    }
+
+}
+
 export async function generateMissionFromPoint(geometry) {
     const result = [];
     const length = geometry.coordinates.length;
@@ -15,7 +27,7 @@ export async function generateMissionFromPoint(geometry) {
 
         const features = turf.points([
             geometry.coordinates[i],
-            geometry.coordinates[i+1]
+            geometry.coordinates[i + 1]
         ]);
         const center = turf.center(features);
 
