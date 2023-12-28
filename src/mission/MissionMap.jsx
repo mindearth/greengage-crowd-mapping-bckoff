@@ -2,7 +2,7 @@ import {useEffect, useRef, useState} from "react";
 import Map, {Layer, NavigationControl, ScaleControl, Source} from "react-map-gl";
 import {useAuth} from "react-oidc-context";
 import {listCampaign} from "../campaign/CampaignService.js";
-import {Button, Divider, Select, Space} from "antd";
+import {Button, Collapse, Divider, Modal, Select, Space, Tabs} from "antd";
 import * as turf from "@turf/turf";
 import {GeocoderControl} from "../core/map/GeocoderControl.jsx";
 import {DrawControl} from "../core/map/DrawControl.jsx";
@@ -33,6 +33,7 @@ export function MissionMap() {
     const [navData, setNavData] = useState([]);
     const [navDataTot, setNavDataTot] = useState(undefined);
     const [navDataTotTimerId, setNavDataTotTimerId] = useState(undefined);
+    const [isModalSaveOpen, setIsModalSaveOpen] = useState(false);
 
     function onViewStateChange(e) {
         setViewState(e.viewState)
@@ -116,6 +117,10 @@ export function MissionMap() {
         setNavDataTot(generateMissionHeaderFromPoint(geometry))
     }
 
+    function savePopupMission() {
+        setIsModalSaveOpen(true)
+    }
+
     useEffect(() => {
 
         listCampaign(auth.user.access_token).then(response => {
@@ -126,208 +131,233 @@ export function MissionMap() {
 
     }, [])
 
+
+    const items = [
+        {
+            key: '1',
+            label: 'Main',
+            children: 'Content of Tab Pane 1',
+        },
+        {
+            key: '2',
+            label: 'Assign',
+            children: 'Content of Tab Pane 2',
+        },
+        {
+            key: '3',
+            label: 'Constraints',
+            children: 'Content of Tab Pane 3',
+        },
+    ];
+
     return (
-
-        <div style={{
-            width: ' calc(100% + 50px)',
-            height: 'calc(100% + 40px)',
-            margin: '-15px -25px -25px -25px',
-        }}>
-
-            <Map
-                ref={mapRef}
-                initialViewState={viewState}
-                mapStyle={"mapbox://styles/mapbox/" + mapStyle}
-                onMove={onViewStateChange}
-                {...viewState}
-                mapboxAccessToken={import.meta.env.VITE_MAPBOX_TOKEN}
-                interactiveLayerIds={['data']}>
-
-                {maskedLayer && <Source id="polygons-source" type="geojson" data={maskedLayer}>
-                    <Layer
-                        id="boundery"
-                        type="fill"
-                        source="polygons-source"
-                        paint={{'fill-color': 'gray', 'fill-opacity': 0.5}}
-                    />
-                </Source>}
-
-                <GeocoderControl mapboxAccessToken={import.meta.env.VITE_MAPBOX_TOKEN} position="top-left"/>
-                <NavigationControl position="bottom-right"/>
-                <ScaleControl position="bottom-left"/>
-                <DrawControl
-                    ref={refDraw}
-                    position="top-left"
-                    displayControlsDefault={false}
-                    defaultMode="simple_select"
-                    keybindings={false}
-                    touchEnabled={false}
-                    controls={{
-                        line_string: false,
-                        polygon: false,
-                        trash: false
-                    }}
-                    onCreate={() => console.log('xx')}
-                    onUpdate={() => console.log('xx')}
-                />
-            </Map>
+        <>
 
             <div style={{
-                position: 'absolute',
-                top: '55px',
-                left: '-15px',
-                display: 'flex',
-                justifyContent: 'space-between',
-                marginBottom: '20px'
+                width: ' calc(100% + 50px)',
+                height: 'calc(100% + 40px)',
+                margin: '-15px -25px -25px -25px',
             }}>
-                <Space>
-                    <Select
-                        placeholder="Select a campaign"
-                        style={{
-                            width: 250,
-                            boxShadow: '0 0 10px 2px rgba(0,0,0,.1)'
+
+                <Map
+                    ref={mapRef}
+                    initialViewState={viewState}
+                    mapStyle={"mapbox://styles/mapbox/" + mapStyle}
+                    onMove={onViewStateChange}
+                    {...viewState}
+                    mapboxAccessToken={import.meta.env.VITE_MAPBOX_TOKEN}
+                    interactiveLayerIds={['data']}>
+
+                    {maskedLayer && <Source id="polygons-source" type="geojson" data={maskedLayer}>
+                        <Layer
+                            id="boundery"
+                            type="fill"
+                            source="polygons-source"
+                            paint={{'fill-color': 'gray', 'fill-opacity': 0.5}}
+                        />
+                    </Source>}
+
+                    <GeocoderControl mapboxAccessToken={import.meta.env.VITE_MAPBOX_TOKEN} position="top-left"/>
+                    <NavigationControl position="bottom-right"/>
+                    <ScaleControl position="bottom-left"/>
+                    <DrawControl
+                        ref={refDraw}
+                        position="top-left"
+                        displayControlsDefault={false}
+                        defaultMode="simple_select"
+                        keybindings={false}
+                        touchEnabled={false}
+                        controls={{
+                            line_string: false,
+                            polygon: false,
+                            trash: false
                         }}
-                        onChange={onChangeCampaign}
-                        options={campaignData.map((item, idx) => {
-                            return {
-                                value: idx,
-                                label: item.name
-                            }
-                        })}
+                        onCreate={() => console.log('xx')}
+                        onUpdate={() => console.log('xx')}
                     />
-                    <Select
-                        defaultValue={mapStyle}
-                        onChange={onChangeMapStyle}
-                        style={{
-                            width: 150,
-                            boxShadow: '0 0 10px 2px rgba(0,0,0,.1)'
-                        }} options={[
-                        {
-                            value: 'light-v9',
-                            label: 'Light',
-                        },
-                        {
-                            value: 'dark-v9',
-                            label: 'Dark',
-                        },
-                        {
-                            value: 'streets-v9',
-                            label: 'Streets',
-                        },
-                        {
-                            value: 'outdoors-v9',
-                            label: 'Outdoors',
-                        },
-                        {
-                            value: 'satellite-streets-v9',
-                            label: 'Satellite',
-                        },
-                    ]}
-                    />
-                </Space>
+                </Map>
 
-            </div>
+                <div style={{
+                    position: 'absolute',
+                    top: '55px',
+                    left: '-15px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    marginBottom: '20px'
+                }}>
+                    <Space>
+                        <Select
+                            placeholder="Select a campaign"
+                            style={{
+                                width: 250,
+                                boxShadow: '0 0 10px 2px rgba(0,0,0,.1)'
+                            }}
+                            onChange={onChangeCampaign}
+                            options={campaignData.map((item, idx) => {
+                                return {
+                                    value: idx,
+                                    label: item.name
+                                }
+                            })}
+                        />
+                        <Select
+                            defaultValue={mapStyle}
+                            onChange={onChangeMapStyle}
+                            style={{
+                                width: 150,
+                                boxShadow: '0 0 10px 2px rgba(0,0,0,.1)'
+                            }} options={[
+                            {
+                                value: 'light-v9',
+                                label: 'Light',
+                            },
+                            {
+                                value: 'dark-v9',
+                                label: 'Dark',
+                            },
+                            {
+                                value: 'streets-v9',
+                                label: 'Streets',
+                            },
+                            {
+                                value: 'outdoors-v9',
+                                label: 'Outdoors',
+                            },
+                            {
+                                value: 'satellite-streets-v9',
+                                label: 'Satellite',
+                            },
+                        ]}
+                        />
+                    </Space>
 
-            <div style={{
-                position: 'absolute',
-                top: '10px',
-                right: '-15px',
-                display: 'flex',
-                justifyContent: 'space-between',
-                marginBottom: '20px'
-            }}>
-
-                <Space.Compact direction="vertical"
-                               style={{
-                                   boxShadow: '0 0 10px 2px rgba(0,0,0,.1)'
-
-                               }}>
-                    <Button
-                        onClick={addMission}
-                        disabled={campaignIdxSelected === null}
-                        type="primary">Draw new mission</Button>
-                    {drawMissionState === 'draw' && <Button
-                        onClick={cancelMission}
-                        danger>Cancel</Button>}
-                    {drawMissionState === 'draw' && <Button
-                        onClick={endMission}
-                        type="primary">Finish</Button>}
-                    {drawMissionState === 'draw-end' && <Button
-                        type="primary">Save</Button>}
-                </Space.Compact>
-
-            </div>
-
-            {navDataTot !== undefined && <div style={{
-                display: 'flex',
-                justifyContent: 'space-around',
-                width: '250px',
-                position: 'absolute',
-                backgroundColor: '#fff',
-                top: '10px',
-                left: '620px',
-                overflowY: 'auto',
-                borderRadius: '4px',
-                padding: '5px',
-                boxShadow: 'rgba(0, 0, 0, 0.1) 0px 0px 10px 2px',
-            }}>
-                <div>
-                    <span style={{fontFamily: 'monospace'}}>{navDataTot?.length}</span> <span
-                    style={{color: '#a1a1a1'}}>mt</span>
                 </div>
-                <div>
-                    <span style={{fontFamily: 'monospace'}}>{navDataTot?.time}</span> <span
-                    style={{color: '#a1a1a1'}}>min</span>
-                </div>
-            </div>}
 
-            {(navData.length > 0) && <div style={{
-                width: '250px',
-                maxHeight: '400px',
-                position: 'absolute',
-                backgroundColor: '#fff',
-                top: '95px',
-                left: '-14px',
-                overflowY: 'auto',
-                borderRadius: '4px',
-                padding: '10px',
-                boxShadow: 'rgba(0, 0, 0, 0.1) 0px 0px 10px 2px',
-            }}>
-                {navData.map((item, idx) => <div key={idx}>
+                <div style={{
+                    position: 'absolute',
+                    top: '10px',
+                    right: '-15px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    marginBottom: '20px'
+                }}>
+
+                    <Space.Compact direction="vertical"
+                                   style={{
+                                       boxShadow: '0 0 10px 2px rgba(0,0,0,.1)'
+
+                                   }}>
+                        <Button
+                            onClick={addMission}
+                            disabled={campaignIdxSelected === null}
+                            type="primary">Draw new mission</Button>
+                        {drawMissionState === 'draw' && <Button
+                            onClick={cancelMission}
+                            danger>Cancel</Button>}
+                        {drawMissionState === 'draw' && <Button
+                            onClick={endMission}
+                            type="primary">Finish</Button>}
+                        {drawMissionState === 'draw-end' && <Button
+                            onClick={savePopupMission}
+                            type="primary">Save</Button>}
+                    </Space.Compact>
+
+                </div>
+
+                {navDataTot !== undefined && <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-around',
+                    width: '250px',
+                    position: 'absolute',
+                    backgroundColor: '#fff',
+                    top: '10px',
+                    left: '620px',
+                    overflowY: 'auto',
+                    borderRadius: '4px',
+                    padding: '5px',
+                    boxShadow: 'rgba(0, 0, 0, 0.1) 0px 0px 10px 2px',
+                }}>
+                    <div>
+                        <span style={{fontFamily: 'monospace'}}>{navDataTot?.length}</span> <span
+                        style={{color: '#a1a1a1'}}>mt</span>
+                    </div>
+                    <div>
+                        <span style={{fontFamily: 'monospace'}}>{navDataTot?.time}</span> <span
+                        style={{color: '#a1a1a1'}}>min</span>
+                    </div>
+                </div>}
+
+                {(navData.length > 0) && <div style={{
+                    width: '250px',
+                    maxHeight: '400px',
+                    position: 'absolute',
+                    backgroundColor: '#fff',
+                    top: '95px',
+                    left: '-14px',
+                    overflowY: 'auto',
+                    borderRadius: '4px',
+                    padding: '10px',
+                    boxShadow: 'rgba(0, 0, 0, 0.1) 0px 0px 10px 2px',
+                }}>
+                    {navData.map((item, idx) => <div key={idx}>
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                        }}>
+                            {item.type === "start" &&
+                                <NavStartIcon style={{width: 15, height: 15, marginRight: 5, fill: '#a1a1a1'}}/>}
+                            {item.type === "right" &&
+                                <NavTurnRightIcon style={{width: 15, height: 15, marginRight: 5, fill: '#a1a1a1'}}/>}
+                            {item.type === "left" &&
+                                <NavTurnLeftIcon style={{width: 15, height: 15, marginRight: 5, fill: '#a1a1a1'}}/>}
+                            {item.type === "straight" &&
+                                <NavStraightIcon style={{width: 15, height: 15, marginRight: 5, fill: '#a1a1a1'}}/>}
+                            {item.description}
+                        </div>
+                        <Divider style={{
+                            fontFamily: 'monospace',
+                            fontSize: '0.9em',
+                            color: '#a1a1a1',
+                            margin: '5px 0'
+                        }}> {item.distance}mt</Divider>
+
+                    </div>)}
                     <div style={{
                         display: 'flex',
                         alignItems: 'center',
                     }}>
-                        {item.type === "start" &&
-                            <NavStartIcon style={{width: 15, height: 15, marginRight: 5, fill: '#a1a1a1'}}/>}
-                        {item.type === "right" &&
-                            <NavTurnRightIcon style={{width: 15, height: 15, marginRight: 5, fill: '#a1a1a1'}}/>}
-                        {item.type === "left" &&
-                            <NavTurnLeftIcon style={{width: 15, height: 15, marginRight: 5, fill: '#a1a1a1'}}/>}
-                        {item.type === "straight" &&
-                            <NavStraightIcon style={{width: 15, height: 15, marginRight: 5, fill: '#a1a1a1'}}/>}
-                        {item.description}
+                        <NavFinishIcon style={{width: 15, height: 15, marginRight: 5, fill: '#a1a1a1'}}/>
+                        Finish
                     </div>
-                    <Divider style={{
-                        fontFamily: 'monospace',
-                        fontSize: '0.9em',
-                        color: '#a1a1a1',
-                        margin: '5px 0'
-                    }}> {item.distance}mt</Divider>
-
-                </div>)}
-                <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                }}>
-                    <NavFinishIcon style={{width: 15, height: 15, marginRight: 5, fill: '#a1a1a1'}}/>
-                    Finish
-                </div>
-            </div>}
+                </div>}
 
 
-        </div>
+            </div>
 
 
+            <Modal title="Save mission" open={isModalSaveOpen}>
+                <Tabs type="card" items={items} defaultActiveKey={['1']} />
+            </Modal>
+        </>
     )
 }
