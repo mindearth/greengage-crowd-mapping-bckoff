@@ -5,7 +5,7 @@ import {useEffect, useRef, useState} from "react";
 import * as turf from "@turf/turf";
 import {DrawControl} from "../core/map/DrawControl.jsx";
 import {generateMissionFromPoint, generateMissionHeaderFromPoint} from "./MissionService.js";
-import {NavFinishIcon, NavStartIcon, NavTurnLeftIcon, NavTurnRightIcon} from "../core/customIcons.jsx";
+import {NavFinishIcon, NavStartIcon, NavStraightIcon, NavTurnLeftIcon, NavTurnRightIcon} from "../core/customIcons.jsx";
 
 export function MissionDraw({
                                 campaignId,
@@ -20,6 +20,7 @@ export function MissionDraw({
     const [maskedLayer, setMaskedLayer] = useState(undefined);
     const [boundery, setBoundery] = useState(undefined);
     const [navData, setNavData] = useState([]);
+    const [navDataTot, setNavDataTot] = useState(undefined);
     const mapRef = useRef();
     const refDraw = useRef(null);
     const worldMask = turf.polygon([
@@ -44,20 +45,8 @@ export function MissionDraw({
 
     async function onUpdateBound(e) {
         const data = await generateMissionFromPoint(e.features[0].geometry)
-        console.log(data)
-
-        console.log(generateMissionHeaderFromPoint(e.features[0].geometry))
-
         setNavData(data)
-
-        // setFeature(e.features[0])
-        // setFeatures(currFeatures => {
-        //     const newFeatures = {...currFeatures};
-        //     for (const f of e.features) {
-        //         newFeatures[f.id] = f;
-        //     }
-        //     return newFeatures;
-        // });
+        setNavDataTot(generateMissionHeaderFromPoint(e.features[0].geometry))
     }
 
     useEffect(() => {
@@ -186,13 +175,34 @@ export function MissionDraw({
                 </Button>
             </div>
 
+            {navDataTot !== undefined && <div style={{
+                display: 'flex',
+                justifyContent: 'space-around',
+                width: '250px',
+                maxHeight: '400px',
+                position: 'absolute',
+                backgroundColor: '#fff',
+                top: '65px',
+                right: '20px',
+                overflowY: 'auto',
+                borderRadius: '10px',
+                padding: '10px',
+                boxShadow: 'rgba(0, 0, 0, 0.1) 0px 0px 10px 2px',
+            }}>
+                <div>
+                    <span style={{fontFamily: 'monospace'}}>{navDataTot.length}</span> <span style={{color: '#a1a1a1'}}>mt</span>
+                </div>
+                <div>
+                    <span style={{fontFamily: 'monospace'}}>{navDataTot.time}</span> <span style={{color: '#a1a1a1'}}>min</span>
+                </div>
+            </div>}
 
             {(navData.length > 0) && <div style={{
                 width: '250px',
                 maxHeight: '400px',
                 position: 'absolute',
                 backgroundColor: '#fff',
-                top: '65px',
+                top: '125px',
                 right: '20px',
                 overflowY: 'auto',
                 borderRadius: '10px',
@@ -210,6 +220,8 @@ export function MissionDraw({
                             <NavTurnRightIcon style={{width: 15, height: 15, marginRight: 5, fill: '#a1a1a1'}}/>}
                         {item.type === "left" &&
                             <NavTurnLeftIcon style={{width: 15, height: 15, marginRight: 5, fill: '#a1a1a1'}}/>}
+                        {item.type === "straight" &&
+                            <NavStraightIcon style={{width: 15, height: 15, marginRight: 5, fill: '#a1a1a1'}}/>}
                         {item.description}
                     </div>
                     <Divider style={{
@@ -217,7 +229,7 @@ export function MissionDraw({
                         fontSize: '0.9em',
                         color: '#a1a1a1',
                         margin: '5px 0'
-                    }}> {item.distance}mt</Divider>
+                    }}> {item.angle} - {item.distance}mt</Divider>
 
                 </div>)}
                 <div style={{

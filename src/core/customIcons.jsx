@@ -9,17 +9,26 @@ const NavStartSvg = () => (
 )
 
 const NavTurnRightSvg = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" version="1" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
         <path
-            d="M 15 2 L 15 5 L 10 5 C 5.6090909 5 2 8.6090909 2 13 L 2 22 L 6 22 L 6 13 C 6 10.790909 7.7909091 9 10 9 L 15 9 L 15 12 L 22 7 L 15 2 z"/>
+            d="M 10.736328 1.0292969 L 10.013672 1.7207031 L 12.201172 4 L 4.5 4 C 3.6774686 4 3 4.6774686 3 5.5 L 3 13 L 4 13 L 4 5.5 C 4 5.2185314 4.2185314 5 4.5 5 L 12.201172 5 L 10.013672 7.2792969 L 10.736328 7.9707031 L 14.068359 4.5 L 10.736328 1.0292969 z"
+            overflow="visible"/>
     </svg>
-
 )
 
 const NavTurnLeftSvg = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" version="1" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
         <path
-            d="M 9 2 L 2 7 L 9 12 L 9 9 L 14 9 C 16.209091 9 18 10.790909 18 13 L 18 22 L 22 22 L 22 13 C 22 8.6090909 18.390909 5 14 5 L 9 5 L 9 2 z"/>
+            d="M 5.2636719 1.0292969 L 1.9316406 4.5 L 5.2636719 7.9707031 L 5.9863281 7.2792969 L 3.7988281 5 L 11.5 5 C 11.781469 5 12 5.2185314 12 5.5 L 12 13 L 13 13 L 13 5.5 C 13 4.6774686 12.322531 4 11.5 4 L 3.7988281 4 L 5.9863281 1.7207031 L 5.2636719 1.0292969 z"
+            overflow="visible"/>
+    </svg>
+)
+
+const NavStraightSvg = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+        <path
+            d="M 7.5 0.93164062 L 4.0292969 4.2636719 L 4.7207031 4.9863281 L 7.0097656 2.7890625 L 7.0097656 14 L 8.0097656 14 L 8.0097656 2.8085938 L 10.279297 4.9863281 L 10.970703 4.2636719 L 7.5 0.93164062 z"
+            overflow="visible"/>
     </svg>
 )
 
@@ -35,5 +44,6 @@ const NavFinishSvg = () => (
 export const NavStartIcon = (props) => <Icon component={NavStartSvg} {...props} />
 export const NavTurnRightIcon = (props) => <Icon component={NavTurnRightSvg} {...props} />
 export const NavTurnLeftIcon = (props) => <Icon component={NavTurnLeftSvg} {...props} />
+export const NavStraightIcon = (props) => <Icon component={NavStraightSvg} {...props} />
 export const NavFinishIcon = (props) => <Icon component={NavFinishSvg} {...props} />
 
