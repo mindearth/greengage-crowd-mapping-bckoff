@@ -1,12 +1,13 @@
 import {useEffect, useRef, useState} from "react";
-import Map, {GeolocateControl, Layer, NavigationControl, ScaleControl, Source} from "react-map-gl";
+import Map, {Layer, NavigationControl, ScaleControl, Source} from "react-map-gl";
 import {useAuth} from "react-oidc-context";
 import {listCampaign} from "../campaign/CampaignService.js";
-import {Button, Radio, Select, Space} from "antd";
-import {ReloadOutlined} from "@ant-design/icons";
-import Search from "antd/lib/input/Search.js";
+import {Button, Divider, Select, Space} from "antd";
 import * as turf from "@turf/turf";
 import {GeocoderControl} from "../core/map/GeocoderControl.jsx";
+import {DrawControl} from "../core/map/DrawControl.jsx";
+import {generateMissionFromPoint, generateMissionHeaderFromPoint} from "./MissionService.js";
+import {NavFinishIcon, NavStartIcon, NavStraightIcon, NavTurnLeftIcon, NavTurnRightIcon} from "../core/customIcons.jsx";
 
 export function MissionMap() {
     const auth = useAuth();
@@ -28,6 +29,10 @@ export function MissionMap() {
     const [mapStyle, setMapStyle] = useState('streets-v9');
     const [maskedLayer, setMaskedLayer] = useState(undefined);
     const [boundery, setBoundery] = useState(undefined);
+    const [drawMissionState, setDrawMissionState] = useState('view');
+    const [navData, setNavData] = useState([]);
+    const [navDataTot, setNavDataTot] = useState(undefined);
+    const [navDataTotTimerId, setNavDataTotTimerId] = useState(undefined);
 
     function onViewStateChange(e) {
         setViewState(e.viewState)
@@ -64,13 +69,51 @@ export function MissionMap() {
                 setIsLoading(false)
                 const center = turf.centerOfMass(polygon)
                 mapRef.current.flyTo({center: center.geometry.coordinates, duration: 20, zoom: 12});
-
-
-            }, 1000);
-
+            }, 100);
         }
+    }
 
+    async function onUpdateBound(e) {
+        debugger
+    }
 
+    function addMission() {
+        refDraw && refDraw.current && refDraw.current.deleteAll();
+        refDraw && refDraw.current && refDraw.current.changeMode('draw_line_string');
+
+        setDrawMissionState('draw')
+
+        setNavDataTotTimerId(setInterval(() => {
+            if (refDraw.current.getAll().features[0].geometry.coordinates.length > 1) {
+                setNavDataTot(generateMissionHeaderFromPoint(refDraw.current.getAll().features[0].geometry))
+            }
+        }, 100))
+    }
+
+    function cancelMission() {
+        refDraw && refDraw.current && refDraw.current.deleteAll();
+        refDraw && refDraw.current && refDraw.current.changeMode('simple_select');
+
+        clearTimeout(navDataTotTimerId)
+
+        setNavData([])
+        setNavDataTot(undefined)
+        setDrawMissionState('start')
+    }
+
+    async function endMission() {
+        refDraw && refDraw.current && refDraw.current.changeMode('simple_select');
+
+        clearTimeout(navDataTotTimerId)
+
+        setDrawMissionState('draw-end')
+
+        const geometry = refDraw.current.getAll().features[0].geometry
+        console.log(geometry)
+        const data = await generateMissionFromPoint(geometry)
+        console.log(data)
+        setNavData(data)
+        setNavDataTot(generateMissionHeaderFromPoint(geometry))
     }
 
     useEffect(() => {
@@ -112,7 +155,21 @@ export function MissionMap() {
                 <GeocoderControl mapboxAccessToken={import.meta.env.VITE_MAPBOX_TOKEN} position="top-left"/>
                 <NavigationControl position="bottom-right"/>
                 <ScaleControl position="bottom-left"/>
-
+                <DrawControl
+                    ref={refDraw}
+                    position="top-left"
+                    displayControlsDefault={false}
+                    defaultMode="simple_select"
+                    keybindings={false}
+                    touchEnabled={false}
+                    controls={{
+                        line_string: false,
+                        polygon: false,
+                        trash: false
+                    }}
+                    onCreate={() => console.log('xx')}
+                    onUpdate={() => console.log('xx')}
+                />
             </Map>
 
             <div style={{
@@ -144,28 +201,28 @@ export function MissionMap() {
                         style={{
                             width: 150,
                             boxShadow: '0 0 10px 2px rgba(0,0,0,.1)'
-                        }}                        options={[
-                            {
-                                value: 'light-v9',
-                                label: 'Light',
-                            },
-                            {
-                                value: 'dark-v9',
-                                label: 'Dark',
-                            },
-                            {
-                                value: 'streets-v9',
-                                label: 'Streets',
-                            },
-                            {
-                                value: 'outdoors-v9',
-                                label: 'Outdoors',
-                            },
-                            {
-                                value: 'satellite-streets-v9',
-                                label: 'Satellite',
-                            },
-                        ]}
+                        }} options={[
+                        {
+                            value: 'light-v9',
+                            label: 'Light',
+                        },
+                        {
+                            value: 'dark-v9',
+                            label: 'Dark',
+                        },
+                        {
+                            value: 'streets-v9',
+                            label: 'Streets',
+                        },
+                        {
+                            value: 'outdoors-v9',
+                            label: 'Outdoors',
+                        },
+                        {
+                            value: 'satellite-streets-v9',
+                            label: 'Satellite',
+                        },
+                    ]}
                     />
                 </Space>
 
@@ -179,14 +236,94 @@ export function MissionMap() {
                 justifyContent: 'space-between',
                 marginBottom: '20px'
             }}>
-                <Button
-                    disabled={campaignIdxSelected === null}
-                    style={{
-                        boxShadow: '0 0 10px 2px rgba(0,0,0,.1)'
-                    }}
-                    type="primary">Draw new mission</Button>
+
+                <Space.Compact direction="vertical"
+                               style={{
+                                   boxShadow: '0 0 10px 2px rgba(0,0,0,.1)'
+
+                               }}>
+                    <Button
+                        onClick={addMission}
+                        disabled={campaignIdxSelected === null}
+                        type="primary">Draw new mission</Button>
+                    {drawMissionState === 'draw' && <Button
+                        onClick={cancelMission}
+                        danger>Cancel</Button>}
+                    {drawMissionState === 'draw' && <Button
+                        onClick={endMission}
+                        type="primary">Finish</Button>}
+                    {drawMissionState === 'draw-end' && <Button
+                        type="primary">Save</Button>}
+                </Space.Compact>
 
             </div>
+
+            {navDataTot !== undefined && <div style={{
+                display: 'flex',
+                justifyContent: 'space-around',
+                width: '250px',
+                position: 'absolute',
+                backgroundColor: '#fff',
+                top: '10px',
+                left: '620px',
+                overflowY: 'auto',
+                borderRadius: '4px',
+                padding: '5px',
+                boxShadow: 'rgba(0, 0, 0, 0.1) 0px 0px 10px 2px',
+            }}>
+                <div>
+                    <span style={{fontFamily: 'monospace'}}>{navDataTot?.length}</span> <span
+                    style={{color: '#a1a1a1'}}>mt</span>
+                </div>
+                <div>
+                    <span style={{fontFamily: 'monospace'}}>{navDataTot?.time}</span> <span
+                    style={{color: '#a1a1a1'}}>min</span>
+                </div>
+            </div>}
+
+            {(navData.length > 0) && <div style={{
+                width: '250px',
+                maxHeight: '400px',
+                position: 'absolute',
+                backgroundColor: '#fff',
+                top: '95px',
+                left: '-14px',
+                overflowY: 'auto',
+                borderRadius: '4px',
+                padding: '10px',
+                boxShadow: 'rgba(0, 0, 0, 0.1) 0px 0px 10px 2px',
+            }}>
+                {navData.map((item, idx) => <div key={idx}>
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                    }}>
+                        {item.type === "start" &&
+                            <NavStartIcon style={{width: 15, height: 15, marginRight: 5, fill: '#a1a1a1'}}/>}
+                        {item.type === "right" &&
+                            <NavTurnRightIcon style={{width: 15, height: 15, marginRight: 5, fill: '#a1a1a1'}}/>}
+                        {item.type === "left" &&
+                            <NavTurnLeftIcon style={{width: 15, height: 15, marginRight: 5, fill: '#a1a1a1'}}/>}
+                        {item.type === "straight" &&
+                            <NavStraightIcon style={{width: 15, height: 15, marginRight: 5, fill: '#a1a1a1'}}/>}
+                        {item.description}
+                    </div>
+                    <Divider style={{
+                        fontFamily: 'monospace',
+                        fontSize: '0.9em',
+                        color: '#a1a1a1',
+                        margin: '5px 0'
+                    }}> {item.distance}mt</Divider>
+
+                </div>)}
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                }}>
+                    <NavFinishIcon style={{width: 15, height: 15, marginRight: 5, fill: '#a1a1a1'}}/>
+                    Finish
+                </div>
+            </div>}
 
 
         </div>
