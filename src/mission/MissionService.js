@@ -49,14 +49,18 @@ export async function generateMissionFromPoint(geometry) {
         result.push({
             type: type,
             angle: direction(bearing - bearingLast),
+            x: {bearing: bearing, bearingLast: bearingLast},
             distance: Math.round(distance),
             description: await mapboxGeocodingAddressFirst(center.geometry.coordinates[0], center.geometry.coordinates[1])
         })
     }
 
+    console.log(result)
     return result
 }
 
 function direction(diff) {
-    return (diff + 180) % 360 - 180
+    return diff < 0
+        ? (diff - 180) % 360 + 180
+        : (diff + 180) % 360 - 180
 }

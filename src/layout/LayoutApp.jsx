@@ -111,7 +111,7 @@ export function LayoutApp() {
                     <div style={{
                         width: '100%',
                         height: '100%',
-                        padding: 25,
+                        padding: '10px 25px 25px 25px',
                         backgroundColor: '#fff',
                         borderTopLeftRadius: 20,
                         borderBottomLeftRadius: 20,

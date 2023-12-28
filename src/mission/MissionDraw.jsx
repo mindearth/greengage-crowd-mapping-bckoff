@@ -21,6 +21,7 @@ export function MissionDraw({
     const [boundery, setBoundery] = useState(undefined);
     const [navData, setNavData] = useState([]);
     const [navDataTot, setNavDataTot] = useState(undefined);
+    const [navDataTotTimerId, setNavDataTotTimerId] = useState(undefined);
     const mapRef = useRef();
     const refDraw = useRef(null);
     const worldMask = turf.polygon([
@@ -41,6 +42,17 @@ export function MissionDraw({
         refDraw && refDraw.current && refDraw.current.deleteAll();
         refDraw && refDraw.current && refDraw.current.changeMode('draw_line_string');
 
+        setNavDataTotTimerId(setInterval(() => {
+            if (refDraw.current.getAll().features[0].geometry.coordinates.length > 1) {
+                setNavDataTot(generateMissionHeaderFromPoint(refDraw.current.getAll().features[0].geometry))
+            }
+        },100))
+    }
+
+    function endMission(){
+        refDraw && refDraw.current && refDraw.current.changeMode('simple_select');
+
+        clearTimeout(navDataTotTimerId)
     }
 
     async function onUpdateBound(e) {
@@ -76,7 +88,7 @@ export function MissionDraw({
 
                 setIsLoading(false)
                 const center = turf.centerOfMass(polygon)
-                mapRef.current.flyTo({center: center.geometry.coordinates, duration: 2000, zoom: 12});
+                mapRef.current.flyTo({center: center.geometry.coordinates, duration: 20, zoom: 12});
 
 
             }, 1000);
@@ -173,6 +185,13 @@ export function MissionDraw({
                     onClick={addMission}>
                     Add new mission
                 </Button>
+                <Button
+                    onClick={endMission}>
+                    Finish mission
+                </Button>
+                <Button>
+                    Save mission
+                </Button>
             </div>
 
             {navDataTot !== undefined && <div style={{
@@ -190,10 +209,12 @@ export function MissionDraw({
                 boxShadow: 'rgba(0, 0, 0, 0.1) 0px 0px 10px 2px',
             }}>
                 <div>
-                    <span style={{fontFamily: 'monospace'}}>{navDataTot.length}</span> <span style={{color: '#a1a1a1'}}>mt</span>
+                    <span style={{fontFamily: 'monospace'}}>{navDataTot.length}</span> <span
+                    style={{color: '#a1a1a1'}}>mt</span>
                 </div>
                 <div>
-                    <span style={{fontFamily: 'monospace'}}>{navDataTot.time}</span> <span style={{color: '#a1a1a1'}}>min</span>
+                    <span style={{fontFamily: 'monospace'}}>{navDataTot.time}</span> <span
+                    style={{color: '#a1a1a1'}}>min</span>
                 </div>
             </div>}
 
@@ -229,7 +250,7 @@ export function MissionDraw({
                         fontSize: '0.9em',
                         color: '#a1a1a1',
                         margin: '5px 0'
-                    }}> {item.angle} - {item.distance}mt</Divider>
+                    }}> {item.distance}mt</Divider>
 
                 </div>)}
                 <div style={{
