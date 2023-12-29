@@ -2,12 +2,14 @@ import {useEffect, useRef, useState} from "react";
 import Map, {Layer, NavigationControl, ScaleControl, Source} from "react-map-gl";
 import {useAuth} from "react-oidc-context";
 import {listCampaign} from "../campaign/CampaignService.js";
-import {Button, Collapse, Divider, Modal, Select, Space, Tabs} from "antd";
+import {Button, Divider, Select, Space} from "antd";
 import * as turf from "@turf/turf";
 import {GeocoderControl} from "../core/map/GeocoderControl.jsx";
 import {DrawControl} from "../core/map/DrawControl.jsx";
 import {generateMissionFromPoint, generateMissionHeaderFromPoint} from "./MissionService.js";
 import {NavFinishIcon, NavStartIcon, NavStraightIcon, NavTurnLeftIcon, NavTurnRightIcon} from "../core/customIcons.jsx";
+import {MissionMapEdit} from "./MissionMapEdit.jsx";
+import dayjs from "dayjs";
 
 export function MissionMap() {
     const auth = useAuth();
@@ -34,6 +36,7 @@ export function MissionMap() {
     const [navDataTot, setNavDataTot] = useState(undefined);
     const [navDataTotTimerId, setNavDataTotTimerId] = useState(undefined);
     const [isModalSaveOpen, setIsModalSaveOpen] = useState(false);
+    const [editData, setEditData] = useState({});
 
     function onViewStateChange(e) {
         setViewState(e.viewState)
@@ -72,10 +75,6 @@ export function MissionMap() {
                 mapRef.current.flyTo({center: center.geometry.coordinates, duration: 20, zoom: 12});
             }, 100);
         }
-    }
-
-    async function onUpdateBound(e) {
-        debugger
     }
 
     function addMission() {
@@ -118,6 +117,20 @@ export function MissionMap() {
     }
 
     function savePopupMission() {
+
+        setEditData({
+            enabled: true,
+            name: 'New mission',
+            description: '',
+            duration: navDataTot.duration,
+            distance: navDataTot.length,
+            reward: 0,
+            weekDayConstraint: 'all',
+            timeConstraint: [
+                dayjs().hour(0).minute(0),
+                dayjs().hour(23).minute(59)]
+        })
+
         setIsModalSaveOpen(true)
     }
 
@@ -131,24 +144,6 @@ export function MissionMap() {
 
     }, [])
 
-
-    const items = [
-        {
-            key: '1',
-            label: 'Main',
-            children: 'Content of Tab Pane 1',
-        },
-        {
-            key: '2',
-            label: 'Assign',
-            children: 'Content of Tab Pane 2',
-        },
-        {
-            key: '3',
-            label: 'Constraints',
-            children: 'Content of Tab Pane 3',
-        },
-    ];
 
     return (
         <>
@@ -192,8 +187,8 @@ export function MissionMap() {
                             polygon: false,
                             trash: false
                         }}
-                        onCreate={() => console.log('xx')}
-                        onUpdate={() => console.log('xx')}
+                        onCreate={() => null}
+                        onUpdate={() => null}
                     />
                 </Map>
 
@@ -354,10 +349,11 @@ export function MissionMap() {
 
             </div>
 
-
-            <Modal title="Save mission" open={isModalSaveOpen}>
-                <Tabs type="card" items={items} defaultActiveKey={['1']} />
-            </Modal>
+            <MissionMapEdit
+                drawerIsOpen={isModalSaveOpen}
+                closeDrawer={() => setIsModalSaveOpen(false)}
+                editData={{}}
+            />
         </>
     )
 }
