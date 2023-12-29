@@ -9,21 +9,23 @@ import {
     InputNumber,
     Radio,
     Row,
-    Select,
     Space,
     Switch,
     TimePicker
 } from "antd";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import dayjs from "dayjs";
 import TextArea from "antd/lib/input/TextArea.js";
 import {weekDays} from "../core/utils.js";
+import {insertMissionMap} from "./MissionService.js";
+import {useAuth} from "react-oidc-context";
 
 export function MissionMapEdit({
                                    drawerIsOpen,
                                    closeDrawer,
                                    editData
                                }) {
+    const auth = useAuth();
     const [isLoading, setIsLoading] = useState(false);
     const [timeConstraintIsEnabled, setTimeConstraintIsEnabled] = useState(true);
     const [form] = Form.useForm();
@@ -31,6 +33,28 @@ export function MissionMapEdit({
     const dateFormat = 'YYYY/MM/DD';
 
     async function submit(values) {
+        setIsLoading(true)
+
+        const data = {
+            id: 0,
+            userId: null,
+            campaignId: editData.campaignId,
+            name: values.name,
+            description: values.description,
+            enable: values.enabled,
+            status: 'free',
+            kind: 'walking',
+            durationMin: values.duration,
+            distanceMt: values.distance,
+            reward: values.reward,
+            weekDayConstraint: values.weekDayConstraint,
+            timeConstraint: "{}",
+            geojsonLinestring: editData.geojsonLinestring,
+            geojsonMission: editData.geojsonMission,
+            jsonNavigation: editData.jsonNavigation
+        }
+
+        await insertMissionMap(auth.user.access_token, data)
     }
 
     function btnSubmit() {
@@ -47,6 +71,16 @@ export function MissionMapEdit({
             ])
         }
     }
+
+    // useEffect(() => {
+    //    console. log(editData)
+    // }, [editData])
+
+    useEffect(() => {
+
+        form.resetFields()
+        setIsLoading(false)
+    }, [drawerIsOpen]);
 
     return (
 
@@ -67,7 +101,6 @@ export function MissionMapEdit({
                 </Space>
             }
         >
-
             <Form
                 form={form}
                 onFinish={submit}
@@ -78,7 +111,11 @@ export function MissionMapEdit({
                         enabled: editData.enabled,
                         name: editData.name,
                         description: editData.description,
-                        duration: [
+                        duration: editData.duration,
+                        distance: editData.distance,
+                        reward: editData.reward,
+                        weekDayConstraint: 'all',
+                        timeConstraint: [
                             dayjs(editData.dateStart, dateFormat),
                             dayjs(editData.dateEnd, dateFormat)
                         ]
@@ -98,7 +135,7 @@ export function MissionMapEdit({
                             dayjs().hour(23).minute(59)]
 
                     }}
-                    >
+            >
                 <Form.Item
                     style={{
                         textAlign: 'end',
@@ -115,47 +152,18 @@ export function MissionMapEdit({
                     />
 
                 </Form.Item>
-                <Row gutter={16}>
-                    <Col span={20}>
-                        <Form.Item
-                            name="name"
-                            label="Name"
-                            rules={[
-                                {
-                                    required: true,
-                                    message: 'Please enter a valid name',
-                                },
-                            ]}
-                        >
-                            <Input placeholder="Please enter name"/>
-                        </Form.Item>
-                    </Col>
-                    <Col span={4}>
-                        <Form.Item
-                            name="kind"
-                            label="Kind"
-                            rules={[
-                                {
-                                    required: true,
-                                    message: 'Please select a type',
-                                },
-                            ]}>
-                            <Select
-                                allowClear
-                                options={[
-                                    {
-                                        value: 'walk',
-                                        label: 'walk',
-                                    },
-                                    {
-                                        value: 'spot',
-                                        label: 'spot',
-                                    },
-                                ]}
-                            />
-                        </Form.Item>
-                    </Col>
-                </Row>
+                <Form.Item
+                    name="name"
+                    label="Name"
+                    rules={[
+                        {
+                            required: true,
+                            message: 'Please enter a valid name',
+                        },
+                    ]}
+                >
+                    <Input placeholder="Please enter name"/>
+                </Form.Item>
                 <Form.Item
                     name="description"
                     label="Description"

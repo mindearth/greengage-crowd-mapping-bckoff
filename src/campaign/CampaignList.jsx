@@ -107,12 +107,6 @@ export function CampaignList() {
         setModalAreaIsOpen(true)
     }
 
-    function editCampaignMissionMap(data) {
-        setEditData(data)
-
-        setModalMissionIsOpen(true)
-    }
-
     function newItem() {
         setEditData(null)
 

@@ -1,5 +1,29 @@
 import * as turf from "@turf/turf";
 import {mapboxGeocodingAddressFirst} from "../core/MapboxService.js";
+import axios from "axios";
+
+const baseUrl = '/api/mission'
+
+export const listMission = (token) => axios.get(baseUrl,
+    {
+        headers: {
+            'Authorization': `Bearer ${token}`,
+        }
+    })
+
+export const getMission = (token, missionId) => axios.get(`${baseUrl}/${missionId}`,
+    {
+        headers: {
+            'Authorization': `Bearer ${token}`,
+        }
+    })
+export const insertMissionMap = (token, data) => axios.post(`${baseUrl}/map`,
+    data,
+    {
+        headers: {
+            'Authorization': `Bearer ${token}`,
+        }
+    })
 
 export function generateMissionHeaderFromPoint(geometry) {
     const line = turf.lineString(geometry.coordinates)

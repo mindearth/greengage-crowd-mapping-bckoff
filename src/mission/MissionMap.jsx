@@ -120,15 +120,19 @@ export function MissionMap() {
 
         setEditData({
             enabled: true,
-            name: 'New mission',
+            campaignId: campaignData[campaignIdxSelected].id,
+            name: '',
             description: '',
-            duration: navDataTot.duration,
+            duration: navDataTot.time,
             distance: navDataTot.length,
             reward: 0,
             weekDayConstraint: 'all',
             timeConstraint: [
                 dayjs().hour(0).minute(0),
-                dayjs().hour(23).minute(59)]
+                dayjs().hour(23).minute(59)],
+            geojsonLinestring: JSON.stringify(refDraw.current.getAll().features[0].geometry),
+            geojsonMission: JSON.stringify({}),
+            jsonNavigation: JSON.stringify(navData)
         })
 
         setIsModalSaveOpen(true)
@@ -352,7 +356,7 @@ export function MissionMap() {
             <MissionMapEdit
                 drawerIsOpen={isModalSaveOpen}
                 closeDrawer={() => setIsModalSaveOpen(false)}
-                editData={{}}
+                editData={editData}
             />
         </>
     )
