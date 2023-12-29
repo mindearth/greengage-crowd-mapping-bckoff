@@ -17,6 +17,14 @@ export const getMission = (token, missionId) => axios.get(`${baseUrl}/${missionI
             'Authorization': `Bearer ${token}`,
         }
     })
+
+export const listMissionMap = (token, campaignId) => axios.get(`${baseUrl}/map/${campaignId}`,
+    {
+        headers: {
+            'Authorization': `Bearer ${token}`,
+        }
+    })
+
 export const insertMissionMap = (token, data) => axios.post(`${baseUrl}/map`,
     data,
     {

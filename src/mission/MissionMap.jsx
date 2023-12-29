@@ -6,7 +6,7 @@ import {Button, Divider, Select, Space} from "antd";
 import * as turf from "@turf/turf";
 import {GeocoderControl} from "../core/map/GeocoderControl.jsx";
 import {DrawControl} from "../core/map/DrawControl.jsx";
-import {generateMissionFromPoint, generateMissionHeaderFromPoint} from "./MissionService.js";
+import {generateMissionFromPoint, generateMissionHeaderFromPoint, listMissionMap} from "./MissionService.js";
 import {NavFinishIcon, NavStartIcon, NavStraightIcon, NavTurnLeftIcon, NavTurnRightIcon} from "../core/customIcons.jsx";
 import {MissionMapEdit} from "./MissionMapEdit.jsx";
 import dayjs from "dayjs";
@@ -37,6 +37,7 @@ export function MissionMap() {
     const [navDataTotTimerId, setNavDataTotTimerId] = useState(undefined);
     const [isModalSaveOpen, setIsModalSaveOpen] = useState(false);
     const [editData, setEditData] = useState({});
+    const [layerMap, setLayerMap] = useState([]);
 
     function onViewStateChange(e) {
         setViewState(e.viewState)
@@ -48,6 +49,9 @@ export function MissionMap() {
 
     function onChangeCampaign(value) {
         setCampaignIdxSelected(value)
+
+
+        listMissionMap(auth.user.access_token, campaignData[value].id).then(response => setLayerMap(response.data))
 
         const campaign = campaignData[value]
         if (campaign.geojson) {
@@ -130,7 +134,7 @@ export function MissionMap() {
             timeConstraint: [
                 dayjs().hour(0).minute(0),
                 dayjs().hour(23).minute(59)],
-            geojsonLinestring: JSON.stringify(refDraw.current.getAll().features[0].geometry),
+            geojsonLinestring: JSON.stringify(refDraw.current.getAll().features[0]),
             geojsonMission: JSON.stringify({}),
             jsonNavigation: JSON.stringify(navData)
         })
@@ -170,11 +174,30 @@ export function MissionMap() {
                     {maskedLayer && <Source id="polygons-source" type="geojson" data={maskedLayer}>
                         <Layer
                             id="boundery"
-                            type="fill"
+                            type="line"
                             source="polygons-source"
                             paint={{'fill-color': 'gray', 'fill-opacity': 0.5}}
                         />
                     </Source>}
+
+                    {layerMap.map((item, idx) => <Source
+                        key={idx}
+                        type="geojson"
+                        data={JSON.parse(item.geojsonLinestring)}>
+                        <Layer
+                            id={"mission-source-" + idx}
+                            type="line"
+                            source="my-data"
+                            layout={{
+                                "line-join": "round",
+                                "line-cap": "round"
+                            }}
+                            paint={{
+                                "line-color": "rgba(3, 170, 238, 0.5)",
+                                "line-width": 5
+                            }}
+                        />
+                    </Source>)}
 
                     <GeocoderControl mapboxAccessToken={import.meta.env.VITE_MAPBOX_TOKEN} position="top-left"/>
                     <NavigationControl position="bottom-right"/>
