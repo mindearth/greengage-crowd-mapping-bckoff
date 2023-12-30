@@ -1,15 +1,18 @@
-import {useEffect, useRef, useState} from "react";
-import Map, {Layer, NavigationControl, ScaleControl, Source} from "react-map-gl";
+import {useCallback, useEffect, useMemo, useRef, useState} from "react";
+import Map, {Layer, Marker, NavigationControl, ScaleControl, Source} from "react-map-gl";
 import {useAuth} from "react-oidc-context";
 import {listCampaign} from "../campaign/CampaignService.js";
-import {Button, Divider, Select, Space} from "antd";
+import {Button, Space} from "antd";
 import * as turf from "@turf/turf";
 import {GeocoderControl} from "../core/map/GeocoderControl.jsx";
 import {DrawControl} from "../core/map/DrawControl.jsx";
 import {generateMissionFromPoint, generateMissionHeaderFromPoint, listMissionMap} from "./MissionService.js";
-import {NavFinishIcon, NavStartIcon, NavStraightIcon, NavTurnLeftIcon, NavTurnRightIcon} from "../core/customIcons.jsx";
 import {MissionMapEdit} from "./MissionMapEdit.jsx";
 import dayjs from "dayjs";
+import {EnvironmentOutlined} from "@ant-design/icons";
+import {MissionMapNavSum} from "./MissionMapNavSum.jsx";
+import {MissionMapNav} from "./MissionMapNav.jsx";
+import {MissionMapSettings} from "./MissionMapSettings.jsx";
 
 export function MissionMap() {
     const auth = useAuth();
@@ -37,7 +40,8 @@ export function MissionMap() {
     const [navDataTotTimerId, setNavDataTotTimerId] = useState(undefined);
     const [isModalSaveOpen, setIsModalSaveOpen] = useState(false);
     const [editData, setEditData] = useState({});
-    const [layerMap, setLayerMap] = useState([]);
+    const [layerMap, setLayerMap] = useState(undefined);
+    const [layerMapSelectedId, setLayerMapSelectedId] = useState("");
 
     function onViewStateChange(e) {
         setViewState(e.viewState)
@@ -51,7 +55,25 @@ export function MissionMap() {
         setCampaignIdxSelected(value)
 
 
-        listMissionMap(auth.user.access_token, campaignData[value].id).then(response => setLayerMap(response.data))
+        listMissionMap(auth.user.access_token, campaignData[value].id).then(response => {
+
+            let data = response.data.map(item => JSON.parse(item.geojsonLinestring))
+            data = data.map(item => {
+                return {
+                    ...item,
+                    properties: {
+                        id: item.id
+                    }
+                }
+            })
+            const result = {
+                "type": "FeatureCollection",
+                "features": data
+            }
+            console.log(result)
+
+            setLayerMap(result)
+        })
 
         const campaign = campaignData[value]
         if (campaign.geojson) {
@@ -142,6 +164,62 @@ export function MissionMap() {
         setIsModalSaveOpen(true)
     }
 
+    const onMouseMoveMap = useCallback(event => {
+        const data = event.features && event.features[0];
+
+        if (data && data.properties) {
+            setLayerMapSelectedId(data.properties.id)
+        } else {
+            setLayerMapSelectedId("")
+        }
+    }, []);
+
+    const onMouseClickMap = useCallback(event => {
+            const data = event.features && event.features[0];
+
+            if (data && data.properties) {
+                refDraw && refDraw.current && refDraw.current.deleteAll();
+                // console.log(refDraw.current)
+
+
+                refDraw && refDraw.current && refDraw.current.add(data.geometry);
+
+
+                const x = {
+                    "type": "FeatureCollection",
+                    "features": []
+                }
+                console.log(layerMap)
+                console.log(data.properties.id)
+
+                layerMap.features.forEach(item => {
+                    if (item.id !== data.properties.id) {
+                        x.features.push(item)
+                    }
+                })
+
+                setLayerMap(x)
+
+                refDraw && refDraw.current && refDraw.current.changeMode('direct_select', {
+                    featureId: refDraw.current.getAll().features[0].id
+                });
+
+                setDrawMissionState('draw-edit')
+
+                setNavDataTotTimerId(setInterval(() => {
+                    if (refDraw.current.getAll().features[0].geometry.coordinates.length > 1) {
+                        setNavDataTot(generateMissionHeaderFromPoint(refDraw.current.getAll().features[0].geometry))
+                    }
+                }, 100))
+            }
+        }
+        ,
+        [layerMap]
+    )
+
+
+    const layerMapFilter = useMemo(() => ['in', 'id', layerMapSelectedId], [layerMapSelectedId]);
+
     useEffect(() => {
 
         listCampaign(auth.user.access_token).then(response => {
@@ -163,31 +241,32 @@ export function MissionMap() {
             }}>
 
                 <Map
+                    reuseMaps
                     ref={mapRef}
                     initialViewState={viewState}
                     mapStyle={"mapbox://styles/mapbox/" + mapStyle}
                     onMove={onViewStateChange}
                     {...viewState}
+                    onMouseMove={onMouseMoveMap}
+                    onClick={onMouseClickMap}
                     mapboxAccessToken={import.meta.env.VITE_MAPBOX_TOKEN}
-                    interactiveLayerIds={['data']}>
+                    interactiveLayerIds={['mission-source', 'mission-source-highlighted']}>
 
                     {maskedLayer && <Source id="polygons-source" type="geojson" data={maskedLayer}>
                         <Layer
                             id="boundery"
-                            type="line"
+                            type="fill"
                             source="polygons-source"
                             paint={{'fill-color': 'gray', 'fill-opacity': 0.5}}
                         />
                     </Source>}
 
-                    {layerMap.map((item, idx) => <Source
-                        key={idx}
-                        type="geojson"
-                        data={JSON.parse(item.geojsonLinestring)}>
+                    {layerMap && <Source type="geojson" data={layerMap}>
                         <Layer
-                            id={"mission-source-" + idx}
+                            id="mission-source"
                             type="line"
                             source="my-data"
+
                             layout={{
                                 "line-join": "round",
                                 "line-cap": "round"
@@ -197,7 +276,30 @@ export function MissionMap() {
                                 "line-width": 5
                             }}
                         />
-                    </Source>)}
+                        <Layer
+                            id="mission-source-highlighted"
+                            type="line"
+                            source="my-data"
+
+                            layout={{
+                                "line-join": "round",
+                                "line-cap": "round"
+                            }}
+                            paint={{
+                                "line-color": "rgba(252,201,0,0.71)",
+                                "line-width": 5
+                            }}
+                            filter={layerMapFilter}
+                        />
+                    </Source>}
+
+                    {layerMap && layerMap.features && layerMap.features.map((item, idx) => <Marker
+                        key={`marker-${idx}`}
+                        longitude={item.geometry.coordinates[0][0]}
+                        latitude={item.geometry.coordinates[0][1]}
+                    >
+                        <EnvironmentOutlined/>
+                    </Marker>)}
 
                     <GeocoderControl mapboxAccessToken={import.meta.env.VITE_MAPBOX_TOKEN} position="top-left"/>
                     <NavigationControl position="bottom-right"/>
@@ -219,61 +321,12 @@ export function MissionMap() {
                     />
                 </Map>
 
-                <div style={{
-                    position: 'absolute',
-                    top: '55px',
-                    left: '-15px',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    marginBottom: '20px'
-                }}>
-                    <Space>
-                        <Select
-                            placeholder="Select a campaign"
-                            style={{
-                                width: 250,
-                                boxShadow: '0 0 10px 2px rgba(0,0,0,.1)'
-                            }}
-                            onChange={onChangeCampaign}
-                            options={campaignData.map((item, idx) => {
-                                return {
-                                    value: idx,
-                                    label: item.name
-                                }
-                            })}
-                        />
-                        <Select
-                            defaultValue={mapStyle}
-                            onChange={onChangeMapStyle}
-                            style={{
-                                width: 150,
-                                boxShadow: '0 0 10px 2px rgba(0,0,0,.1)'
-                            }} options={[
-                            {
-                                value: 'light-v9',
-                                label: 'Light',
-                            },
-                            {
-                                value: 'dark-v9',
-                                label: 'Dark',
-                            },
-                            {
-                                value: 'streets-v9',
-                                label: 'Streets',
-                            },
-                            {
-                                value: 'outdoors-v9',
-                                label: 'Outdoors',
-                            },
-                            {
-                                value: 'satellite-streets-v9',
-                                label: 'Satellite',
-                            },
-                        ]}
-                        />
-                    </Space>
-
-                </div>
+                <MissionMapSettings
+                    campaignData={campaignData}
+                    onChangeCampaign={onChangeCampaign}
+                    mapStyle={mapStyle}
+                    onChangeMapStyle={onChangeMapStyle}
+                />
 
                 <div style={{
                     position: 'absolute',
@@ -287,12 +340,11 @@ export function MissionMap() {
                     <Space.Compact direction="vertical"
                                    style={{
                                        boxShadow: '0 0 10px 2px rgba(0,0,0,.1)'
-
                                    }}>
-                        <Button
+                        {drawMissionState !== 'draw-edit' && <Button
                             onClick={addMission}
                             disabled={campaignIdxSelected === null}
-                            type="primary">Draw new mission</Button>
+                            type="primary">Draw new mission</Button>}
                         {drawMissionState === 'draw' && <Button
                             onClick={cancelMission}
                             danger>Cancel</Button>}
@@ -302,78 +354,18 @@ export function MissionMap() {
                         {drawMissionState === 'draw-end' && <Button
                             onClick={savePopupMission}
                             type="primary">Save</Button>}
+
+                        {drawMissionState === 'draw-edit' && <Button
+                            danger>Cancel</Button>}
+                        {drawMissionState === 'draw-edit' && <Button
+                            type="primary">Save</Button>}
                     </Space.Compact>
 
                 </div>
 
-                {navDataTot !== undefined && <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-around',
-                    width: '250px',
-                    position: 'absolute',
-                    backgroundColor: '#fff',
-                    top: '10px',
-                    left: '620px',
-                    overflowY: 'auto',
-                    borderRadius: '4px',
-                    padding: '5px',
-                    boxShadow: 'rgba(0, 0, 0, 0.1) 0px 0px 10px 2px',
-                }}>
-                    <div>
-                        <span style={{fontFamily: 'monospace'}}>{navDataTot?.length}</span> <span
-                        style={{color: '#a1a1a1'}}>mt</span>
-                    </div>
-                    <div>
-                        <span style={{fontFamily: 'monospace'}}>{navDataTot?.time}</span> <span
-                        style={{color: '#a1a1a1'}}>min</span>
-                    </div>
-                </div>}
+                {navDataTot !== undefined && <MissionMapNavSum navDataTot={navDataTot}/>}
 
-                {(navData.length > 0) && <div style={{
-                    width: '250px',
-                    maxHeight: '400px',
-                    position: 'absolute',
-                    backgroundColor: '#fff',
-                    top: '95px',
-                    left: '-14px',
-                    overflowY: 'auto',
-                    borderRadius: '4px',
-                    padding: '10px',
-                    boxShadow: 'rgba(0, 0, 0, 0.1) 0px 0px 10px 2px',
-                }}>
-                    {navData.map((item, idx) => <div key={idx}>
-                        <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                        }}>
-                            {item.type === "start" &&
-                                <NavStartIcon style={{width: 15, height: 15, marginRight: 5, fill: '#a1a1a1'}}/>}
-                            {item.type === "right" &&
-                                <NavTurnRightIcon style={{width: 15, height: 15, marginRight: 5, fill: '#a1a1a1'}}/>}
-                            {item.type === "left" &&
-                                <NavTurnLeftIcon style={{width: 15, height: 15, marginRight: 5, fill: '#a1a1a1'}}/>}
-                            {item.type === "straight" &&
-                                <NavStraightIcon style={{width: 15, height: 15, marginRight: 5, fill: '#a1a1a1'}}/>}
-                            {item.description}
-                        </div>
-                        <Divider style={{
-                            fontFamily: 'monospace',
-                            fontSize: '0.9em',
-                            color: '#a1a1a1',
-                            margin: '5px 0'
-                        }}> {item.distance}mt</Divider>
-
-                    </div>)}
-                    <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                    }}>
-                        <NavFinishIcon style={{width: 15, height: 15, marginRight: 5, fill: '#a1a1a1'}}/>
-                        Finish
-                    </div>
-                </div>}
-
-
+                {(navData.length > 0) && <MissionMapNav navData={navData}/>}
             </div>
 
             <MissionMapEdit
