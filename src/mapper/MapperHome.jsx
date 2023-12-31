@@ -1,5 +1,12 @@
+import {Tabs} from "antd";
+import {MapperList} from "./MapperList.jsx";
+
 export function MapperHome() {
+    const items = [{
+        key: '1', label: 'List of Mappers', children: <MapperList/>,
+    }]
+
     return (
-        <h1>Mapper</h1>
+        <Tabs defaultActiveKey="1" items={items}/>
     )
 }
