@@ -35,12 +35,14 @@ export function MissionMap() {
     const [maskedLayer, setMaskedLayer] = useState(undefined);
     const [boundery, setBoundery] = useState(undefined);
     const [drawMissionState, setDrawMissionState] = useState('view');
+    const [isEditMode, setIsEditMode] = useState(false);
     const [navData, setNavData] = useState([]);
     const [navDataTot, setNavDataTot] = useState(undefined);
     const [navDataTotTimerId, setNavDataTotTimerId] = useState(undefined);
     const [isModalSaveOpen, setIsModalSaveOpen] = useState(false);
     const [editData, setEditData] = useState({});
     const [layerMap, setLayerMap] = useState(undefined);
+    const [layerMapEdit, setLayerMapEdit] = useState(undefined);
     const [layerMapSelectedId, setLayerMapSelectedId] = useState("");
 
     function onViewStateChange(e) {
@@ -53,7 +55,6 @@ export function MissionMap() {
 
     function onChangeCampaign(value) {
         setCampaignIdxSelected(value)
-
 
         listMissionMap(auth.user.access_token, campaignData[value].id).then(response => {
 
@@ -70,7 +71,6 @@ export function MissionMap() {
                 "type": "FeatureCollection",
                 "features": data
             }
-            console.log(result)
 
             setLayerMap(result)
         })
@@ -95,7 +95,6 @@ export function MissionMap() {
                     maxBounds: bounds
                 })
 
-
                 setIsLoading(false)
                 const center = turf.centerOfMass(polygon)
                 mapRef.current.flyTo({center: center.geometry.coordinates, duration: 20, zoom: 12});
@@ -103,12 +102,7 @@ export function MissionMap() {
         }
     }
 
-    function addMission() {
-        refDraw && refDraw.current && refDraw.current.deleteAll();
-        refDraw && refDraw.current && refDraw.current.changeMode('draw_line_string');
-
-        setDrawMissionState('draw')
-
+    function setNavDataTimer() {
         setNavDataTotTimerId(setInterval(() => {
             if (refDraw.current.getAll().features[0].geometry.coordinates.length > 1) {
                 setNavDataTot(generateMissionHeaderFromPoint(refDraw.current.getAll().features[0].geometry))
@@ -116,15 +110,57 @@ export function MissionMap() {
         }, 100))
     }
 
+    function addMission() {
+        refDraw && refDraw.current && refDraw.current.deleteAll();
+        refDraw && refDraw.current && refDraw.current.changeMode('draw_line_string');
+
+        setDrawMissionState('draw')
+        setIsEditMode(false)
+
+        setNavDataTimer()
+    }
+
+    function editMission(data) {
+        refDraw && refDraw.current && refDraw.current.deleteAll();
+        refDraw && refDraw.current && refDraw.current.add(data.geometry);
+
+        const idx = layerMap.features.map(item => item.id).indexOf(data.properties.id)
+        setLayerMapEdit(layerMap.features[idx])
+        const features = layerMap.features.toSpliced(idx, 1)
+
+        setLayerMap({
+            ...layerMap,
+            features: features
+        })
+
+        refDraw && refDraw.current && refDraw.current.changeMode('direct_select', {
+            featureId: refDraw.current.getAll().features[0].id
+        });
+
+
+        setDrawMissionState('draw')
+        setIsEditMode(true)
+
+        setNavDataTimer()
+    }
+
     function cancelMission() {
         refDraw && refDraw.current && refDraw.current.deleteAll();
         refDraw && refDraw.current && refDraw.current.changeMode('simple_select');
+
+        if (layerMapEdit) {
+            setLayerMap({
+                ...layerMap,
+                features: [...layerMap.features, layerMapEdit]
+            })
+        }
 
         clearTimeout(navDataTotTimerId)
 
         setNavData([])
         setNavDataTot(undefined)
-        setDrawMissionState('start')
+        setDrawMissionState('view')
+        setLayerMapEdit(undefined)
     }
 
     async function endMission() {
@@ -178,39 +214,46 @@ export function MissionMap() {
             const data = event.features && event.features[0];
 
             if (data && data.properties) {
-                refDraw && refDraw.current && refDraw.current.deleteAll();
-                // console.log(refDraw.current)
+
+                editMission(data)
+
+                /*
+                                refDraw && refDraw.current && refDraw.current.deleteAll();
+                                // console.log(refDraw.current)
+
+                                setIsEditMode(true)
 
 
-                refDraw && refDraw.current && refDraw.current.add(data.geometry);
+                                refDraw && refDraw.current && refDraw.current.add(data.geometry);
 
 
-                const x = {
-                    "type": "FeatureCollection",
-                    "features": []
-                }
-                console.log(layerMap)
-                console.log(data.properties.id)
+                                const x = {
+                                    "type": "FeatureCollection",
+                                    "features": []
+                                }
+                                console.log(layerMap)
+                                console.log(data.properties.id)
 
-                layerMap.features.forEach(item => {
-                    if (item.id !== data.properties.id) {
-                        x.features.push(item)
-                    }
-                })
+                                layerMap.features.forEach(item => {
+                                    if (item.id !== data.properties.id) {
+                                        x.features.push(item)
+                                    }
+                                })
 
-                setLayerMap(x)
+                                setLayerMap(x)
 
-                refDraw && refDraw.current && refDraw.current.changeMode('direct_select', {
-                    featureId: refDraw.current.getAll().features[0].id
-                });
+                                refDraw && refDraw.current && refDraw.current.changeMode('direct_select', {
+                                    featureId: refDraw.current.getAll().features[0].id
+                                });
 
-                setDrawMissionState('draw-edit')
+                                setDrawMissionState('draw')
 
-                setNavDataTotTimerId(setInterval(() => {
-                    if (refDraw.current.getAll().features[0].geometry.coordinates.length > 1) {
-                        setNavDataTot(generateMissionHeaderFromPoint(refDraw.current.getAll().features[0].geometry))
-                    }
-                }, 100))
+                                setNavDataTotTimerId(setInterval(() => {
+                                    if (refDraw.current.getAll().features[0].geometry.coordinates.length > 1) {
+                                        setNavDataTot(generateMissionHeaderFromPoint(refDraw.current.getAll().features[0].geometry))
+                                    }
+                                }, 100))
+                */
             }
         }
         ,
@@ -341,7 +384,7 @@ export function MissionMap() {
                                    style={{
                                        boxShadow: '0 0 10px 2px rgba(0,0,0,.1)'
                                    }}>
-                        {drawMissionState !== 'draw-edit' && <Button
+                        {drawMissionState === 'view' && <Button
                             onClick={addMission}
                             disabled={campaignIdxSelected === null}
                             type="primary">Draw new mission</Button>}
@@ -353,11 +396,6 @@ export function MissionMap() {
                             type="primary">Finish</Button>}
                         {drawMissionState === 'draw-end' && <Button
                             onClick={savePopupMission}
-                            type="primary">Save</Button>}
-
-                        {drawMissionState === 'draw-edit' && <Button
-                            danger>Cancel</Button>}
-                        {drawMissionState === 'draw-edit' && <Button
                             type="primary">Save</Button>}
                     </Space.Compact>
 
