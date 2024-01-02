@@ -137,7 +137,6 @@ export function MissionMap() {
             featureId: refDraw.current.getAll().features[0].id
         });
 
-
         setDrawMissionState('draw')
         setIsEditMode(true)
 
@@ -171,14 +170,10 @@ export function MissionMap() {
         setDrawMissionState('draw-end')
 
         const geometry = refDraw.current.getAll().features[0].geometry
-        console.log(geometry)
         const data = await generateMissionFromPoint(geometry)
-        console.log(data)
         setNavData(data)
         setNavDataTot(generateMissionHeaderFromPoint(geometry))
-    }
 
-    function savePopupMission() {
 
         setEditData({
             enabled: true,
@@ -198,6 +193,8 @@ export function MissionMap() {
         })
 
         setIsModalSaveOpen(true)
+
+        // todo check if is edit mode -> get data
     }
 
     const onMouseMoveMap = useCallback(event => {
@@ -214,46 +211,7 @@ export function MissionMap() {
             const data = event.features && event.features[0];
 
             if (data && data.properties) {
-
                 editMission(data)
-
-                /*
-                                refDraw && refDraw.current && refDraw.current.deleteAll();
-                                // console.log(refDraw.current)
-
-                                setIsEditMode(true)
-
-
-                                refDraw && refDraw.current && refDraw.current.add(data.geometry);
-
-
-                                const x = {
-                                    "type": "FeatureCollection",
-                                    "features": []
-                                }
-                                console.log(layerMap)
-                                console.log(data.properties.id)
-
-                                layerMap.features.forEach(item => {
-                                    if (item.id !== data.properties.id) {
-                                        x.features.push(item)
-                                    }
-                                })
-
-                                setLayerMap(x)
-
-                                refDraw && refDraw.current && refDraw.current.changeMode('direct_select', {
-                                    featureId: refDraw.current.getAll().features[0].id
-                                });
-
-                                setDrawMissionState('draw')
-
-                                setNavDataTotTimerId(setInterval(() => {
-                                    if (refDraw.current.getAll().features[0].geometry.coordinates.length > 1) {
-                                        setNavDataTot(generateMissionHeaderFromPoint(refDraw.current.getAll().features[0].geometry))
-                                    }
-                                }, 100))
-                */
             }
         }
         ,
@@ -272,6 +230,10 @@ export function MissionMap() {
 
 
     }, [])
+
+    useEffect(() => {
+        cancelMission()
+    }, [isModalSaveOpen])
 
 
     return (
@@ -393,9 +355,6 @@ export function MissionMap() {
                             danger>Cancel</Button>}
                         {drawMissionState === 'draw' && <Button
                             onClick={endMission}
-                            type="primary">Finish</Button>}
-                        {drawMissionState === 'draw-end' && <Button
-                            onClick={savePopupMission}
                             type="primary">Save</Button>}
                     </Space.Compact>
 

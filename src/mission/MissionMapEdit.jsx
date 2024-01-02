@@ -72,9 +72,6 @@ export function MissionMapEdit({
         }
     }
 
-    // useEffect(() => {
-    //    console. log(editData)
-    // }, [editData])
 
     useEffect(() => {
 
@@ -106,35 +103,19 @@ export function MissionMapEdit({
                 onFinish={submit}
                 disabled={isLoading}
                 layout="vertical"
-                initialValues={editData
-                    ? {
-                        enabled: editData.enabled,
-                        name: editData.name,
-                        description: editData.description,
-                        duration: editData.duration,
-                        distance: editData.distance,
-                        reward: editData.reward,
-                        weekDayConstraint: 'all',
-                        timeConstraint: [
-                            dayjs(editData.dateStart, dateFormat),
-                            dayjs(editData.dateEnd, dateFormat)
-                        ]
-                    }
-                    : {
-                        enabled: true,
-                        client: null,
-                        name: null,
-                        kind: null,
-                        description: null,
-                        duration: 15,
-                        distance: 1000,
-                        reward: 1,
-                        weekDayConstraint: 'all',
-                        timeConstraint: [
-                            dayjs().hour(0).minute(0),
-                            dayjs().hour(23).minute(59)]
-
-                    }}
+                initialValues={{
+                    enabled: editData.enabled,
+                    name: editData.name,
+                    description: editData.description,
+                    duration: editData.duration,
+                    distance: editData.distance,
+                    reward: editData.reward,
+                    weekDayConstraint: 'all',
+                    timeConstraint: [
+                        dayjs(editData.dateStart, dateFormat),
+                        dayjs(editData.dateEnd, dateFormat)
+                    ]
+                }}
             >
                 <Form.Item
                     style={{
@@ -255,10 +236,10 @@ export function MissionMapEdit({
                             name="timeConstraintCheckAllday"
                             label="  "
                             style={{marginLeft: 10}}
-                        >
+                            valuePropName="checked">
                             <Checkbox
                                 onChange={(e) => onChangeTimeConstraintCheckAllDay(e.target.checked)}
-                                defaultChecked={true}>All day</Checkbox>
+                            >All day</Checkbox>
 
                         </Form.Item>
                     </Col>
