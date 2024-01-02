@@ -57,6 +57,8 @@ export function MissionMapEdit({
         editData.id !== 0
             ? await updateMissionMap(auth.user.access_token, data)
             : await insertMissionMap(auth.user.access_token, data)
+
+        closeDrawer(true)
     }
 
     function btnSubmit() {

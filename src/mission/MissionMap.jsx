@@ -50,17 +50,7 @@ export function MissionMap() {
     const [layerMapEdit, setLayerMapEdit] = useState(undefined);
     const [layerMapSelectedId, setLayerMapSelectedId] = useState("");
 
-    function onViewStateChange(e) {
-        setViewState(e.viewState)
-    }
-
-    function onChangeMapStyle(value) {
-        setMapStyle(value);
-    }
-
-    function onChangeCampaign(value) {
-        setCampaignIdxSelected(value)
-
+    function loadCamapignMap(value) {
         listMissionMapByCampaign(auth.user.access_token, campaignData[value].id).then(response => {
 
             const data = response.data
@@ -81,6 +71,20 @@ export function MissionMap() {
 
             setLayerMap(result)
         })
+    }
+
+    function onViewStateChange(e) {
+        setViewState(e.viewState)
+    }
+
+    function onChangeMapStyle(value) {
+        setMapStyle(value);
+    }
+
+    function onChangeCampaign(value) {
+        setCampaignIdxSelected(value)
+
+        loadCamapignMap(value)
 
         const campaign = campaignData[value]
         if (campaign.geojson) {
@@ -247,6 +251,10 @@ export function MissionMap() {
 
         if (isModalSaveOpen === false) {
             cancelMission()
+
+            if (campaignIdxSelected !== null) {
+                loadCamapignMap(campaignIdxSelected)
+            }
         }
     }, [isModalSaveOpen])
 
