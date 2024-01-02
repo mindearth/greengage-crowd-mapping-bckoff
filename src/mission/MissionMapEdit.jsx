@@ -17,7 +17,7 @@ import {useEffect, useState} from "react";
 import dayjs from "dayjs";
 import TextArea from "antd/lib/input/TextArea.js";
 import {weekDays} from "../core/utils.js";
-import {insertMissionMap} from "./MissionService.js";
+import {insertMissionMap, updateMissionMap} from "./MissionService.js";
 import {useAuth} from "react-oidc-context";
 
 export function MissionMapEdit({
@@ -36,7 +36,7 @@ export function MissionMapEdit({
         setIsLoading(true)
 
         const data = {
-            id: 0,
+            id: editData.id,
             userId: null,
             campaignId: editData.campaignId,
             name: values.name,
@@ -54,7 +54,9 @@ export function MissionMapEdit({
             jsonNavigation: editData.jsonNavigation
         }
 
-        await insertMissionMap(auth.user.access_token, data)
+        editData.id !== 0
+            ? await updateMissionMap(auth.user.access_token, data)
+            : await insertMissionMap(auth.user.access_token, data)
     }
 
     function btnSubmit() {

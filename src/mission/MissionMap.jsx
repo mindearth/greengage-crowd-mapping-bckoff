@@ -6,7 +6,12 @@ import {Button, Space} from "antd";
 import * as turf from "@turf/turf";
 import {GeocoderControl} from "../core/map/GeocoderControl.jsx";
 import {DrawControl} from "../core/map/DrawControl.jsx";
-import {generateMissionFromPoint, generateMissionHeaderFromPoint, listMissionMap} from "./MissionService.js";
+import {
+    generateMissionFromPoint,
+    generateMissionHeaderFromPoint,
+    getMissionMap,
+    listMissionMapByCampaign
+} from "./MissionService.js";
 import {MissionMapEdit} from "./MissionMapEdit.jsx";
 import dayjs from "dayjs";
 import {EnvironmentOutlined} from "@ant-design/icons";
@@ -56,20 +61,22 @@ export function MissionMap() {
     function onChangeCampaign(value) {
         setCampaignIdxSelected(value)
 
-        listMissionMap(auth.user.access_token, campaignData[value].id).then(response => {
+        listMissionMapByCampaign(auth.user.access_token, campaignData[value].id).then(response => {
 
-            let data = response.data.map(item => JSON.parse(item.geojsonLinestring))
-            data = data.map(item => {
+            const data = response.data
+            let dataGeojson = data.map(item => JSON.parse(item.geojsonLinestring))
+            dataGeojson = dataGeojson.map((item, idx) => {
                 return {
                     ...item,
                     properties: {
-                        id: item.id
+                        id: item.id,
+                        missionId: data[idx].id,
                     }
                 }
             })
             const result = {
                 "type": "FeatureCollection",
-                "features": data
+                "features": dataGeojson
             }
 
             setLayerMap(result)
@@ -104,7 +111,7 @@ export function MissionMap() {
 
     function setNavDataTimer() {
         setNavDataTotTimerId(setInterval(() => {
-            if (refDraw.current.getAll().features[0].geometry.coordinates.length > 1) {
+            if (refDraw && refDraw.current && refDraw.current.getAll().features[0].geometry.coordinates.length > 1) {
                 setNavDataTot(generateMissionHeaderFromPoint(refDraw.current.getAll().features[0].geometry))
             }
         }, 100))
@@ -141,6 +148,12 @@ export function MissionMap() {
         setIsEditMode(true)
 
         setNavDataTimer()
+
+        getMissionMap(auth.user.access_token, data.properties.missionId).then(response => {
+            const data = response.data
+            setEditData(data)
+            setNavData(JSON.parse(data.jsonNavigation))
+        })
     }
 
     function cancelMission() {
@@ -160,6 +173,7 @@ export function MissionMap() {
         setNavDataTot(undefined)
         setDrawMissionState('view')
         setLayerMapEdit(undefined)
+        setIsEditMode(false)
     }
 
     async function endMission() {
@@ -174,27 +188,25 @@ export function MissionMap() {
         setNavData(data)
         setNavDataTot(generateMissionHeaderFromPoint(geometry))
 
-
         setEditData({
+            id: isEditMode ? editData.id : 0,
             enabled: true,
             campaignId: campaignData[campaignIdxSelected].id,
-            name: '',
-            description: '',
+            name: isEditMode ? editData.name : '',
+            description: isEditMode ? editData.description : '',
             duration: navDataTot.time,
             distance: navDataTot.length,
-            reward: 0,
-            weekDayConstraint: 'all',
-            timeConstraint: [
+            reward: isEditMode ? editData.reward : 0,
+            weekDayConstraint: isEditMode ? editData.weekDayConstraint : 'all',
+            timeConstraint: isEditMode ? editData.timeConstraint : [
                 dayjs().hour(0).minute(0),
                 dayjs().hour(23).minute(59)],
             geojsonLinestring: JSON.stringify(refDraw.current.getAll().features[0]),
             geojsonMission: JSON.stringify({}),
-            jsonNavigation: JSON.stringify(navData)
+            jsonNavigation: JSON.stringify(data)
         })
 
         setIsModalSaveOpen(true)
-
-        // todo check if is edit mode -> get data
     }
 
     const onMouseMoveMap = useCallback(event => {
@@ -210,12 +222,12 @@ export function MissionMap() {
     const onMouseClickMap = useCallback(event => {
             const data = event.features && event.features[0];
 
-            if (data && data.properties) {
+            if (!isEditMode && data && data.properties) {
                 editMission(data)
             }
         }
         ,
-        [layerMap]
+        [editMission, isEditMode]
     )
 
 
@@ -232,7 +244,10 @@ export function MissionMap() {
     }, [])
 
     useEffect(() => {
-        cancelMission()
+
+        if (isModalSaveOpen === false) {
+            cancelMission()
+        }
     }, [isModalSaveOpen])
 
 

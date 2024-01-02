@@ -18,7 +18,14 @@ export const getMission = (token, missionId) => axios.get(`${baseUrl}/${missionI
         }
     })
 
-export const listMissionMap = (token, campaignId) => axios.get(`${baseUrl}/map/${campaignId}`,
+export const listMissionMapByCampaign = (token, campaignId) => axios.get(`${baseUrl}/map/campaign/${campaignId}`,
+    {
+        headers: {
+            'Authorization': `Bearer ${token}`,
+        }
+    })
+
+export const getMissionMap = (token, missionId) => axios.get(`${baseUrl}/map/${missionId}`,
     {
         headers: {
             'Authorization': `Bearer ${token}`,
@@ -26,6 +33,14 @@ export const listMissionMap = (token, campaignId) => axios.get(`${baseUrl}/map/$
     })
 
 export const insertMissionMap = (token, data) => axios.post(`${baseUrl}/map`,
+    data,
+    {
+        headers: {
+            'Authorization': `Bearer ${token}`,
+        }
+    })
+
+export const updateMissionMap = (token, data) => axios.put(`${baseUrl}/map`,
     data,
     {
         headers: {
@@ -56,7 +71,6 @@ export async function generateMissionFromPoint(geometry) {
 
         bearingLast = bearing
         bearing = turf.bearing(turf.point(geometry.coordinates[i]), turf.point(geometry.coordinates[i + 1]))
-        console.log(bearingLast, bearing)
         const distance = turf.distance(turf.point(geometry.coordinates[i]), turf.point(geometry.coordinates[i + 1])) * 1000
 
         const features = turf.points([
@@ -86,8 +100,6 @@ export async function generateMissionFromPoint(geometry) {
             description: await mapboxGeocodingAddressFirst(center.geometry.coordinates[0], center.geometry.coordinates[1])
         })
     }
-
-    console.log(result)
     return result
 }
 
