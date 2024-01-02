@@ -2,11 +2,12 @@ import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import Map, {Layer, Marker, NavigationControl, ScaleControl, Source} from "react-map-gl";
 import {useAuth} from "react-oidc-context";
 import {listCampaign} from "../campaign/CampaignService.js";
-import {Button, Space} from "antd";
+import {Button, Popconfirm, Space} from "antd";
 import * as turf from "@turf/turf";
 import {GeocoderControl} from "../core/map/GeocoderControl.jsx";
 import {DrawControl} from "../core/map/DrawControl.jsx";
 import {
+    deleteMission,
     generateMissionFromPoint,
     generateMissionHeaderFromPoint,
     getMissionMap,
@@ -213,6 +214,14 @@ export function MissionMap() {
         setIsModalSaveOpen(true)
     }
 
+    async function delMission() {
+        await deleteMission(auth.user.access_token, editData.id)
+
+        cancelMission()
+
+        loadCamapignMap(campaignIdxSelected)
+    }
+
     const onMouseMoveMap = useCallback(event => {
         const data = event.features && event.features[0];
 
@@ -230,10 +239,8 @@ export function MissionMap() {
                 editMission(data)
             }
         }
-        ,
-        [editMission, isEditMode]
+        , [editMission, isEditMode]
     )
-
 
     const layerMapFilter = useMemo(() => ['in', 'id', layerMapSelectedId], [layerMapSelectedId]);
 
@@ -369,13 +376,25 @@ export function MissionMap() {
                                    style={{
                                        boxShadow: '0 0 10px 2px rgba(0,0,0,.1)'
                                    }}>
+
                         {drawMissionState === 'view' && <Button
                             onClick={addMission}
                             disabled={campaignIdxSelected === null}
                             type="primary">Draw new mission</Button>}
+                        {drawMissionState === 'draw' && isEditMode === true && <Popconfirm
+                            onConfirm={delMission}
+                            placement="left"
+                            title="Delete"
+                            description="Are you sure to delete this mission?"
+                            okText="Yes"
+                            cancelText="No">
+                            <Button
+                                danger
+                            >Delete</Button>
+                        </Popconfirm>}
                         {drawMissionState === 'draw' && <Button
                             onClick={cancelMission}
-                            danger>Cancel</Button>}
+                        >Cancel</Button>}
                         {drawMissionState === 'draw' && <Button
                             onClick={endMission}
                             type="primary">Save</Button>}

@@ -18,6 +18,13 @@ export const getMission = (token, missionId) => axios.get(`${baseUrl}/${missionI
         }
     })
 
+export const deleteMission = (token, missionId) => axios.delete(`${baseUrl}/${missionId}`,
+    {
+        headers: {
+            'Authorization': `Bearer ${token}`,
+        }
+    })
+
 export const listMissionMapByCampaign = (token, campaignId) => axios.get(`${baseUrl}/map/campaign/${campaignId}`,
     {
         headers: {
