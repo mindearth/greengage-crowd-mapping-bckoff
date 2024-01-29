@@ -115,3 +115,44 @@ function direction(diff) {
         ? (diff - 180) % 360 + 180
         : (diff + 180) % 360 - 180
 }
+
+export function generateMissionLineStringFromPoint(geometry, dataNav) {
+    const result = {
+        "type": "FeatureCollection",
+        "name": "",
+        "crs": {
+            "type": "name",
+            "properties": {
+                "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+            }
+        },
+        "features": []
+    }
+
+    dataNav.forEach((nav, idx) => {
+        result.features.push(
+            {
+                "type": "Feature",
+                "properties": {
+                    "length_m": nav.distance,
+                    "id": idx,
+                    "directions": "",
+                    "act_next": nav.description,
+                    "descr": "",
+                    "action_str": nav.type,
+                    "missionID": 2
+                },
+                "geometry": {
+                    "type": "LineString",
+                    "coordinates": [
+                        geometry.coordinates[idx],
+                        geometry.coordinates[idx + 1],
+                    ]
+                }
+            })
+
+
+    })
+
+    return result
+}

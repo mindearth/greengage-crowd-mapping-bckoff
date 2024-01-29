@@ -9,7 +9,7 @@ import {DrawControl} from "../core/map/DrawControl.jsx";
 import {
     deleteMission,
     generateMissionFromPoint,
-    generateMissionHeaderFromPoint,
+    generateMissionHeaderFromPoint, generateMissionLineStringFromPoint,
     getMissionMap,
     listMissionMapByCampaign
 } from "./MissionService.js";
@@ -207,7 +207,7 @@ export function MissionMap() {
                 dayjs().hour(0).minute(0),
                 dayjs().hour(23).minute(59)],
             geojsonLinestring: JSON.stringify(refDraw.current.getAll().features[0]),
-            geojsonMission: JSON.stringify({}),
+            geojsonMission: JSON.stringify(generateMissionLineStringFromPoint(geometry, data)),
             jsonNavigation: JSON.stringify(data)
         })
 
