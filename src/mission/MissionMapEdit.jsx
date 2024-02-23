@@ -51,7 +51,8 @@ export function MissionMapEdit({
             timeConstraint: "{}",
             geojsonLinestring: editData.geojsonLinestring,
             geojsonMission: editData.geojsonMission,
-            jsonNavigation: editData.jsonNavigation
+            jsonNavigation: editData.jsonNavigation,
+            startPoint: editData.startPoint
         }
 
         editData.id !== 0

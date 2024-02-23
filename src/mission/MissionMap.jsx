@@ -208,7 +208,15 @@ export function MissionMap() {
                 dayjs().hour(23).minute(59)],
             geojsonLinestring: JSON.stringify(refDraw.current.getAll().features[0]),
             geojsonMission: JSON.stringify(generateMissionLineStringFromPoint(geometry, data)),
-            jsonNavigation: JSON.stringify(data)
+            jsonNavigation: JSON.stringify(data),
+            startPoint: {
+                "type": "point",
+                "value": `(${geometry.coordinates[0][0]},${geometry.coordinates[0][1]})`,
+                "x": geometry.coordinates[0][0],
+                "y": geometry.coordinates[0][1],
+                "isNull": false,
+                "null": false
+            }
         })
 
         setIsModalSaveOpen(true)
