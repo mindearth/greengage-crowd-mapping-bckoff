@@ -55,9 +55,21 @@ export function MissionMapEdit({
             startPoint: editData.startPoint
         }
 
-        editData.id !== 0
-            ? await updateMissionMap(auth.user.access_token, data)
-            : await insertMissionMap(auth.user.access_token, data)
+        if (editData.id === 0) {
+            await insertMissionMap(auth.user.access_token, data)
+            await notifyCreateMission({
+                origin: 'mindearth',
+                data: {
+                    name: values.name,
+                    starting_point: [editData.startPoint.x, editData.startPoint.y],
+                    description: values.description,
+                    duration_min: values.duration,
+                    distance_mt: values.distance
+                }
+            })
+        } else {
+            await updateMissionMap(auth.user.access_token, data)
+        }
 
         closeDrawer(true)
     }
