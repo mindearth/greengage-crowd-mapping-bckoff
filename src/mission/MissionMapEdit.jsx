@@ -59,20 +59,24 @@ export function MissionMapEdit({
         if (editData.id === 0) {
             const response = await insertMissionMap(auth.user.access_token, data)
             const missionId = response.data
-
-            await notifyCreateMission({
-                origin: 'mindearth',
-                data: {
-                    name: values.name,
-                    starting_point: [editData.startPoint.x, editData.startPoint.y],
-                    description: values.description,
-                    Duration: values.duration,
-                    distance_mt: values.distance,
-                    missions: {
-                        id: missionId
-                    }
+            const dataWebhook = {
+                "origin": "mindearth",
+                "type": "create",
+                "data": {
+                    "name": values.name,
+                    "starting_point": [editData.startPoint.x, editData.startPoint.y],
+                    "description": values.description,
+                    "duration_min": values.duration,
+                    "distance_mt": values.distance,
+                    "deeplink": "https://d1t7ydd8maxiy4.cloudfront.net/mission/" + missionId,
+                    "external_id": missionId,
+                    "active": true
                 }
-            })
+            }
+
+            debugger
+
+            await notifyCreateMission(dataWebhook)
         } else {
             await updateMissionMap(auth.user.access_token, data)
         }
