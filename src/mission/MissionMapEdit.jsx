@@ -74,7 +74,7 @@ export function MissionMapEdit({
                 }
             }
 
-            debugger
+            // debugger
 
             await notifyCreateMission(dataWebhook)
         } else {
