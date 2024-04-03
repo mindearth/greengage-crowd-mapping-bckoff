@@ -19,6 +19,7 @@ import TextArea from "antd/lib/input/TextArea.js";
 import {weekDays} from "../core/utils.js";
 import {insertMissionMap, updateMissionMap} from "./MissionService.js";
 import {useAuth} from "react-oidc-context";
+import {notifyCreateMission} from "./MissionWebHookService.js";
 
 export function MissionMapEdit({
                                    drawerIsOpen,
@@ -51,12 +52,30 @@ export function MissionMapEdit({
             timeConstraint: "{}",
             geojsonLinestring: editData.geojsonLinestring,
             geojsonMission: editData.geojsonMission,
-            jsonNavigation: editData.jsonNavigation
+            jsonNavigation: editData.jsonNavigation,
+            startPoint: editData.startPoint
         }
 
-        editData.id !== 0
-            ? await updateMissionMap(auth.user.access_token, data)
-            : await insertMissionMap(auth.user.access_token, data)
+        if (editData.id === 0) {
+            const response = await insertMissionMap(auth.user.access_token, data)
+            const missionId = response.data
+
+            await notifyCreateMission({
+                origin: 'mindearth',
+                data: {
+                    name: values.name,
+                    starting_point: [editData.startPoint.x, editData.startPoint.y],
+                    description: values.description,
+                    Duration: values.duration,
+                    distance_mt: values.distance,
+                    missions: {
+                        id: missionId
+                    }
+                }
+            })
+        } else {
+            await updateMissionMap(auth.user.access_token, data)
+        }
 
         closeDrawer(true)
     }

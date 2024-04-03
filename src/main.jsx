@@ -8,6 +8,7 @@ const oidcConfig = {
     authority: "https://iam.mindearth.ai/realms/greengage",
     client_id: "backoffice-app",
     redirect_uri: "http://localhost:5173/",
+    // redirect_uri: "https://greengage-mission-control.mindearth.ai/",
     userStore: new WebStorageStateStore({ store: window.localStorage }),
 };
 
